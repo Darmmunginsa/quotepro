@@ -1957,7 +1957,7 @@ async function saveCompanySettings() {
       companySettings.SignatureURL = companySettings.SignatureBase64;
       pendingSignatureFile=null;
     }
-    const fields = { Title:'main', CompanyName:document.getElementById('co-name').value, TaxID:document.getElementById('co-taxid').value, Phone:document.getElementById('co-phone').value, Email:document.getElementById('co-email').value, Address:document.getElementById('co-address').value, PrimaryColor:companySettings.PrimaryColor, FooterText:document.getElementById('co-footer').value, LogoURL:companySettings.LogoURL||'', SignatureURL:companySettings.SignatureURL||'', LogoBase64:companySettings.LogoBase64||'', SignatureBase64:companySettings.SignatureBase64||'' };
+    const fields = { Title:'main', CompanyName:document.getElementById('co-name').value, TaxID:document.getElementById('co-taxid').value, Phone:document.getElementById('co-phone').value, Email:document.getElementById('co-email').value, Address:document.getElementById('co-address').value, PrimaryColor:companySettings.PrimaryColor, FooterText:document.getElementById('co-footer').value, LogoURL:companySettings.LogoBase64||companySettings.LogoURL||'', SignatureURL:companySettings.SignatureBase64||companySettings.SignatureURL||'' };
     if (companySettingsId) { await updateListItem(CONFIG.lists.company, companySettingsId, fields); }
     else { const c=await createListItem(CONFIG.lists.company, fields); companySettingsId=c.id; }
     companySettings={...companySettings,...fields};
