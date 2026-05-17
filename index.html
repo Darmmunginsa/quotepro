@@ -2046,18 +2046,18 @@ function renderPDFHTML(d) {
           ${s.TaxID ? 'เลขประจำตัวผู้เสียภาษี: '+s.TaxID : ''}
         </div>
       </div>
-      <div style="text-align:right;min-width:180px">
-        <div style="background:${primaryColor};color:#fff;padding:8px 16px;border-radius:6px;margin-bottom:10px;display:inline-block">
+      <div style="text-align:right;min-width:180px;flex-shrink:0">
+        <div style="background:${primaryColor};color:#fff;padding:8px 16px;border-radius:6px;margin-bottom:8px;display:inline-block">
           <div style="font-size:10px;opacity:0.8">Quotation No.</div>
           <div style="font-size:16px;font-weight:700;letter-spacing:0.5px">${q.Title||''}</div>
         </div>
-        <table style="font-size:11px;width:100%;border-collapse:collapse;text-align:left;margin-top:6px">
-          <tr><td style="color:#888;padding:2px 4px 2px 0;white-space:nowrap;font-size:11px">Quotation Date:</td><td style="font-weight:500;font-size:11px">${(q.QuoteDate||'').split('T')[0]}</td></tr>
-          ${q.ContractStartDate ? `<tr><td style="color:#888;padding:2px 4px 2px 0;font-size:11px">เริ่มสัญญา:</td><td style="font-weight:500;font-size:11px">${(q.ContractStartDate||'').split('T')[0]}</td></tr>` : ''}
-          ${q.ContractEndDate ? `<tr><td style="color:#888;padding:2px 4px 2px 0;font-size:11px">สิ้นสุดสัญญา:</td><td style="font-weight:500;font-size:11px">${(q.ContractEndDate||'').split('T')[0]}</td></tr>` : ''}
-          <tr><td style="color:#888;padding:2px 4px 2px 0;font-size:11px">Sale Name:</td><td style="font-weight:500;font-size:11px">${q.SaleName||''}</td></tr>
-          <tr><td style="color:#888;padding:2px 4px 2px 0;font-size:11px">Tel No.:</td><td style="font-weight:500;font-size:11px">${q.SaleTel||''}</td></tr>
-          <tr><td style="color:#888;padding:2px 4px 2px 0;font-size:11px">Email:</td><td style="font-weight:500;font-size:11px">${q.SaleEmail||''}</td></tr>
+        <table style="font-size:11px;width:100%;border-collapse:collapse;text-align:left;color:#1a1a2e">
+          <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Quotation Date:</td><td style="font-weight:600;color:#1a1a2e">${(q.QuoteDate||'').split('T')[0]}</td></tr>
+          ${q.ContractStartDate ? `<tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">เริ่มสัญญา:</td><td style="font-weight:600;color:#1a1a2e">${(q.ContractStartDate||'').split('T')[0]}</td></tr>` : ''}
+          ${q.ContractEndDate ? `<tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">สิ้นสุดสัญญา:</td><td style="font-weight:600;color:#1a1a2e">${(q.ContractEndDate||'').split('T')[0]}</td></tr>` : ''}
+          <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Sale Name:</td><td style="font-weight:600;color:#1a1a2e">${q.SaleName||''}</td></tr>
+          <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Tel No.:</td><td style="font-weight:600;color:#1a1a2e">${q.SaleTel||''}</td></tr>
+          <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Email:</td><td style="font-weight:600;color:#1a1a2e">${q.SaleEmail||''}</td></tr>
         </table>
       </div>
     </div>
