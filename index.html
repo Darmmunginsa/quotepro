@@ -807,7 +807,7 @@ function msalLogin() {
   const authUrl = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?`
     + `client_id=${CONFIG.clientId}`
     + `&response_type=token`
-    + `&redirect_uri=${encodeURIComponent('https://darmmunginsa.github.io/quotepro/')}`
+    + `&redirect_uri=${encodeURIComponent('https://darmmunginsa.github.io/quotepro/index.html')}`
     + `&scope=${encodeURIComponent(CONFIG.scopes.join(' '))}`
     + `&response_mode=fragment`
     + `&nonce=${Math.random().toString(36).slice(2)}`;
@@ -1961,44 +1961,6 @@ async function uploadSlipToSharePoint(file, paymentRef) {
   if(!uploadRes.ok) throw new Error('Upload ไม่สำเร็จ: '+uploadRes.status);
   const uploaded=await uploadRes.json();
   return uploaded.webUrl||'';
-}
-
-
-// ============================================================
-// HELPERS
-// ============================================================
-const fmt = n => '฿' + Number(n||0).toLocaleString('th-TH', {minimumFractionDigits:2,maximumFractionDigits:2});
-const escHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-
-function previewPDF() {
-  const t = calcTotals();
-  const fakeQ = {
-    Title: document.getElementById('q-no').value,
-    ClientName: document.getElementById('q-client').value,
-    ContactPerson: document.getElementById('q-contact').value,
-    QuoteDate: document.getElementById('q-date').value,
-    PaymentMethod: document.getElementById('q-payment').value,
-    DiscountPct: +(document.getElementById('g-disc').value)||0,
-    TotalAmount: t.grand,
-    Note: document.getElementById('q-note').value,
-    Terms: document.getElementById('q-terms').value
-  };
-  const d = buildPDFData(fakeQ, quoteItems.map(i=>({Title:i.name,Quantity:i.qty,Unit:i.unit,UnitPrice:i.price,DiscountPct:i.disc})));
-  document.getElementById('pdf-content').innerHTML = renderPDFHTML(d);
-  openModal('pdf-modal');
-}
-
-async function showPDFForQuote(id) {
-  const q = quotesData.find(x => x.id === id);
-  if (!q) return;
-  let items = [];
-  try {
-    const all = await getListItems(CONFIG.lists.quoteItems);
-    items = all.filter(i => String(i.QuoteID) === String(id));
-  } catch(e) {}
-  const d = buildPDFData(q, items);
-  document.getElementById('pdf-content').innerHTML = renderPDFHTML(d);
-  openModal('pdf-modal');
 }
 
 
