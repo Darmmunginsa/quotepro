@@ -1796,7 +1796,13 @@ async function deleteCustomer(id) {
   catch(e) { toast('ลบไม่สำเร็จ: '+e.message,'error'); }
 }
 
-function openCustomerPicker() { renderCustomerPicker(); openModal('customer-picker-modal'); }
+async function openCustomerPicker() {
+  if (customersData.length === 0) {
+    await loadCustomers();
+  }
+  renderCustomerPicker();
+  openModal('customer-picker-modal');
+}
 
 function renderCustomerPicker() {
   const q = (document.getElementById('cust-picker-search')?.value||'').toLowerCase();
