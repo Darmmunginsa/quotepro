@@ -1918,7 +1918,6 @@ async function saveCompanySettings() {
 // ============================================================
 // SLIP UPLOAD
 // ============================================================
-let slipFile = null;
 
 function handleSlipSelect(input) { if (input.files&&input.files[0]) setSlipFile(input.files[0]); }
 function handleSlipDrop(event) { event.preventDefault(); document.getElementById('slip-drop-zone').style.borderColor='var(--border2)'; const file=event.dataTransfer.files[0]; if(file) setSlipFile(file); }
