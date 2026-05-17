@@ -1859,7 +1859,7 @@ document.addEventListener('click', e => {
 // ============================================================
 // COMPANY SETTINGS
 // ============================================================
-let companySettings = { CompanyName:'', TaxID:'', Phone:'', Email:'', Address:'', PrimaryColor:'#1a3a5c', FooterText:'', LogoURL:'', SignatureURL:'' };
+let companySettings = { CompanyName:'', TaxID:'', Phone:'', Email:'', Address:'', PrimaryColor:'#1a3a5c', FooterText:'', LogoURL:'', SignatureURL:'', LogoBase64:'', SignatureBase64:'' };
 let companySettingsId = null;
 let pendingLogoFile = null;
 let pendingSignatureFile = null;
@@ -1868,7 +1868,13 @@ async function loadCompanySettings() {
   try {
     const items = await getListItems(CONFIG.lists.company);
     const item = items.find(i=>i.Title==='main');
-    if (item) { companySettings={...companySettings,...item}; companySettingsId=item.id; }
+    if (item) {
+      companySettings={...companySettings,...item};
+      companySettingsId=item.id;
+      // If LogoURL is a base64 data URL, also set LogoBase64
+      if (item.LogoURL && item.LogoURL.startsWith('data:')) companySettings.LogoBase64 = item.LogoURL;
+      if (item.SignatureURL && item.SignatureURL.startsWith('data:')) companySettings.SignatureBase64 = item.SignatureURL;
+    }
   } catch(e) { console.warn('Could not load company settings:', e.message); }
 }
 
@@ -1884,8 +1890,10 @@ function renderCompanySettingsForm() {
     document.getElementById('co-color').value = s.PrimaryColor||'#1a3a5c';
     document.getElementById('co-color-label').textContent = s.PrimaryColor||'#1a3a5c';
     selectColor(s.PrimaryColor||'#1a3a5c');
-    if (s.LogoURL) document.getElementById('logo-preview').innerHTML=`<img src="${s.LogoURL}" style="max-width:100%;max-height:100%;object-fit:contain">`;
-    if (s.SignatureURL) document.getElementById('sig-preview').innerHTML=`<img src="${s.SignatureURL}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    const logoSrc = s.LogoBase64 || s.LogoURL || '';
+    const sigSrc = s.SignatureBase64 || s.SignatureURL || '';
+    if (logoSrc) document.getElementById('logo-preview').innerHTML=`<img src="${logoSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    if (sigSrc) document.getElementById('sig-preview').innerHTML=`<img src="${sigSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
   }
 }
 
@@ -1905,8 +1913,23 @@ function previewCompanyImage(inputId, previewId, type) {
   if (!file) return;
   if (type==='logo') pendingLogoFile=file; else pendingSignatureFile=file;
   const reader = new FileReader();
-  reader.onload = e => { document.getElementById(previewId).innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:100%;object-fit:contain">`; };
+  reader.onload = e => {
+    const b64 = e.target.result;
+    document.getElementById(previewId).innerHTML=`<img src="${b64}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    // Store base64 immediately for PDF use
+    if (type==='logo') companySettings.LogoBase64 = b64;
+    else companySettings.SignatureBase64 = b64;
+  };
   reader.readAsDataURL(file);
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 async function uploadCompanyImage(file, name) {
@@ -1923,9 +1946,18 @@ async function uploadCompanyImage(file, name) {
 async function saveCompanySettings() {
   toast('กำลังบันทึก...','info');
   try {
-    if (pendingLogoFile) { companySettings.LogoURL=await uploadCompanyImage(pendingLogoFile,'logo.'+pendingLogoFile.name.split('.').pop()); pendingLogoFile=null; }
-    if (pendingSignatureFile) { companySettings.SignatureURL=await uploadCompanyImage(pendingSignatureFile,'signature.'+pendingSignatureFile.name.split('.').pop()); pendingSignatureFile=null; }
-    const fields = { Title:'main', CompanyName:document.getElementById('co-name').value, TaxID:document.getElementById('co-taxid').value, Phone:document.getElementById('co-phone').value, Email:document.getElementById('co-email').value, Address:document.getElementById('co-address').value, PrimaryColor:companySettings.PrimaryColor, FooterText:document.getElementById('co-footer').value, LogoURL:companySettings.LogoURL||'', SignatureURL:companySettings.SignatureURL||'' };
+    if (pendingLogoFile) {
+      // Store as base64 for reliable display in PDF
+      companySettings.LogoBase64 = await fileToBase64(pendingLogoFile);
+      companySettings.LogoURL = companySettings.LogoBase64;
+      pendingLogoFile=null;
+    }
+    if (pendingSignatureFile) {
+      companySettings.SignatureBase64 = await fileToBase64(pendingSignatureFile);
+      companySettings.SignatureURL = companySettings.SignatureBase64;
+      pendingSignatureFile=null;
+    }
+    const fields = { Title:'main', CompanyName:document.getElementById('co-name').value, TaxID:document.getElementById('co-taxid').value, Phone:document.getElementById('co-phone').value, Email:document.getElementById('co-email').value, Address:document.getElementById('co-address').value, PrimaryColor:companySettings.PrimaryColor, FooterText:document.getElementById('co-footer').value, LogoURL:companySettings.LogoURL||'', SignatureURL:companySettings.SignatureURL||'', LogoBase64:companySettings.LogoBase64||'', SignatureBase64:companySettings.SignatureBase64||'' };
     if (companySettingsId) { await updateListItem(CONFIG.lists.company, companySettingsId, fields); }
     else { const c=await createListItem(CONFIG.lists.company, fields); companySettingsId=c.id; }
     companySettings={...companySettings,...fields};
@@ -2038,7 +2070,7 @@ function renderPDFHTML(d) {
     <!-- HEADER -->
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid ${primaryColor}">
       <div style="flex:1;max-width:55%;word-break:break-word">
-        ${s.LogoURL ? `<img src="${s.LogoURL}" style="max-height:60px;max-width:180px;object-fit:contain;margin-bottom:8px;display:block">` : ''}
+        ${(s.LogoBase64||s.LogoURL) ? `<img src="${s.LogoBase64||s.LogoURL}" style="max-height:60px;max-width:180px;object-fit:contain;margin-bottom:8px;display:block">` : ''}
         <div style="font-size:16px;font-weight:700;color:${primaryColor}">${s.CompanyName||'บริษัท ไอที เซอร์วิสเซส จำกัด'}</div>
         <div style="font-size:10px;color:#666;line-height:1.8;margin-top:4px">
           ${s.Address ? s.Address+'<br>' : ''}
@@ -2141,7 +2173,7 @@ function renderPDFHTML(d) {
       </div>
       <div>
         <div style="font-size:10px;color:#888;margin-bottom:4px">Quoted By</div>
-        ${s.SignatureURL ? `<img src="${s.SignatureURL}" style="max-height:44px;object-fit:contain;display:block;margin:0 auto 4px">` : '<div style="height:44px"></div>'}
+        ${(s.SignatureBase64||s.SignatureURL) ? `<img src="${s.SignatureBase64||s.SignatureURL}" style="max-height:44px;object-fit:contain;display:block;margin:0 auto 4px">` : '<div style="height:44px"></div>'}
         <div style="border-top:0.5px solid #ccc;padding-top:8px">
           <div style="color:#333;font-weight:500">${q.SaleName||'................................................'}</div>
           <div style="color:#888;font-size:10px;margin-top:4px">Strategic Partnership</div>
