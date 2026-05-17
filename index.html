@@ -1,0 +1,2160 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuotePro — Sales Quotation System v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --surface: #181c27;
+  --surface2: #1e2333;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #4f8ef7;
+  --accent2: #6ea8fe;
+  --green: #34d399;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --purple: #a78bfa;
+  --text: #e8eaf0;
+  --muted: #7b8299;
+  --muted2: #9ca3b5;
+  --font: 'IBM Plex Sans Thai', sans-serif;
+  --mono: 'IBM Plex Mono', monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* Layout */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;font-family:var(--mono)}
+.logo h1{font-size:15px;font-weight:600;letter-spacing:-0.3px}
+.logo p{font-size:11px;color:var(--muted);margin-left:38px}
+.nav{flex:1;padding:10px 8px;overflow-y:auto}
+.nav-group{margin-bottom:20px}
+.nav-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:0 8px 6px}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;color:var(--muted2);font-size:13px;transition:all 0.15s;border:1px solid transparent;position:relative}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.nav-item.active{background:rgba(79,142,247,0.12);color:var(--accent2);border-color:rgba(79,142,247,0.2)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;border-radius:10px;padding:1px 6px;font-weight:500;font-family:var(--mono)}
+.user-section{padding:12px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.user-name{font-size:12px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:var(--muted)}
+.btn-logout{background:none;border:none;color:var(--muted);cursor:pointer;padding:2px;border-radius:4px;display:flex;align-items:center;transition:color 0.15s}
+.btn-logout:hover{color:var(--red)}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:50px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.topbar h2{font-size:14px;font-weight:500;flex:1;color:var(--text)}
+.content{flex:1;overflow-y:auto;padding:20px}
+.page{display:none}
+.page.active{display:block}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:7px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;font-size:12px;font-family:var(--font);transition:all 0.15s;white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.18)}
+.btn:disabled{opacity:0.4;cursor:not-allowed}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:#3d7ef5;border-color:#3d7ef5}
+.btn-success{background:rgba(52,211,153,0.15);border-color:rgba(52,211,153,0.3);color:var(--green)}
+.btn-success:hover{background:rgba(52,211,153,0.25)}
+.btn-danger{background:rgba(248,113,113,0.15);border-color:rgba(248,113,113,0.3);color:var(--red)}
+.btn-danger:hover{background:rgba(248,113,113,0.25)}
+.btn-warn{background:rgba(251,191,36,0.15);border-color:rgba(251,191,36,0.3);color:var(--amber)}
+.btn-warn:hover{background:rgba(251,191,36,0.25)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-xs{padding:2px 8px;font-size:11px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+.card-header{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.card-header h3{font-size:13px;font-weight:500;flex:1;color:var(--text)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.stat-value{font-size:20px;font-weight:600;font-family:var(--mono);letter-spacing:-0.5px}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.stat.blue .stat-value{color:var(--accent2)}
+.stat.green .stat-value{color:var(--green)}
+.stat.amber .stat-value{color:var(--amber)}
+.stat.red .stat-value{color:var(--red)}
+
+/* Table */
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;text-align:left;font-size:11px;font-weight:500;color:var(--muted);background:rgba(255,255,255,0.02);border-bottom:1px solid var(--border);white-space:nowrap;letter-spacing:0.03em;text-transform:uppercase}
+td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.action-btn{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;border-radius:5px;display:inline-flex;align-items:center;transition:all 0.15s}
+.action-btn:hover{background:rgba(255,255,255,0.08);color:var(--text)}
+.action-btn svg{width:14px;height:14px}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-draft{background:rgba(123,130,153,0.15);color:var(--muted2);border:1px solid rgba(123,130,153,0.2)}
+.badge-pending{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+.badge-approved{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.badge-rejected{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.badge-sent{background:rgba(79,142,247,0.12);color:var(--accent2);border:1px solid rgba(79,142,247,0.2)}
+.badge-paid{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.badge-partial{background:rgba(251,191,36,0.12);color:var(--amber);border:1px solid rgba(251,191,36,0.2)}
+.badge-unpaid{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group label{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:0.03em;text-transform:uppercase}
+.form-group input,.form-group select,.form-group textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:7px 10px;font-size:13px;color:var(--text);font-family:var(--font);transition:border-color 0.15s;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group input::placeholder{color:var(--muted)}
+.form-group textarea{resize:vertical;min-height:64px}
+.form-group select option{background:var(--surface2)}
+.form-group input[readonly]{opacity:0.6;cursor:default}
+
+/* Items table */
+.items-wrap{overflow-x:auto}
+.items-table{width:100%;border-collapse:collapse;min-width:700px}
+.items-table th{background:rgba(255,255,255,0.02);padding:8px 10px;font-size:11px;color:var(--muted);font-weight:500;text-align:left;letter-spacing:0.03em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.items-table td{padding:5px 6px;border-bottom:1px solid var(--border)}
+.items-table input,.items-table select{background:var(--surface2);border:1px solid transparent;border-radius:5px;padding:5px 8px;font-size:12px;color:var(--text);font-family:var(--font);width:100%;outline:none;transition:border-color 0.15s}
+.items-table input:focus,.items-table select:focus{border-color:var(--accent)}
+.items-table .num{text-align:right}
+.total-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:10px}
+.total-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px;color:var(--muted)}
+.total-row span:last-child{font-family:var(--mono);font-size:12px}
+.total-grand{font-size:15px;font-weight:600;color:var(--text);border-top:1px solid var(--border);margin-top:8px;padding-top:8px}
+.total-grand span:last-child{font-family:var(--mono);color:var(--accent2)}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity 0.2s;backdrop-filter:blur(4px)}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:560px;max-width:94vw;max-height:88vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,0.5)}
+.modal-lg{width:700px}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-header h3{font-size:14px;font-weight:500;flex:1}
+.modal-body{padding:20px}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--surface)}
+
+/* Login */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+.login-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:40px;width:380px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,0.5)}
+.login-logo{width:56px;height:56px;background:var(--accent);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;font-family:var(--mono);margin:0 auto 20px}
+.login-card h1{font-size:22px;font-weight:600;margin-bottom:6px;letter-spacing:-0.5px}
+.login-card p{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.6}
+.btn-ms{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px 16px;background:#2f7bef;border:none;border-radius:8px;color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--font);transition:background 0.15s}
+.btn-ms:hover{background:#1d6ee0}
+.btn-ms svg{width:18px;height:18px;flex-shrink:0}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:slideIn 0.2s ease;min-width:240px}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--accent)}
+@keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* Catalog grid */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cat-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:13px;cursor:pointer;transition:all 0.15s}
+.cat-card:hover{border-color:rgba(79,142,247,0.4);background:rgba(79,142,247,0.05)}
+.cat-card .name{font-size:13px;font-weight:500;margin-bottom:3px}
+.cat-card .sku{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px}
+.cat-card .price{font-size:15px;font-weight:600;color:var(--accent2);font-family:var(--mono)}
+.cat-tag{display:inline-block;font-size:10px;padding:1px 7px;border-radius:10px;background:rgba(255,255,255,0.06);color:var(--muted2);margin-top:6px}
+
+/* Progress */
+.progress-bar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin:6px 0}
+.progress-fill{height:100%;border-radius:2px;transition:width 0.4s}
+
+/* Filter */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.filter-row select,.filter-row input{background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:6px 10px;font-size:12px;color:var(--text);font-family:var(--font);outline:none}
+.filter-row select:focus,.filter-row input:focus{border-color:var(--accent)}
+.spacer{flex:1}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);gap:10px;font-size:13px}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty svg{width:36px;height:36px;margin:0 auto 10px;opacity:0.2;display:block}
+
+/* Approve timeline */
+.timeline{display:flex;margin:14px 0}
+.tl-step{flex:1;text-align:center;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;top:11px;left:50%;right:-50%;height:1px;background:var(--border);z-index:0}
+.tl-dot{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 5px;z-index:1;position:relative}
+.tl-dot svg{width:11px;height:11px;color:var(--muted)}
+.tl-dot.done{background:rgba(52,211,153,0.15);border-color:var(--green)}
+.tl-dot.done svg{color:var(--green)}
+.tl-dot.active{background:rgba(79,142,247,0.15);border-color:var(--accent)}
+.tl-dot.active svg{color:var(--accent2)}
+.tl-dot.reject{background:rgba(248,113,113,0.15);border-color:var(--red)}
+.tl-dot.reject svg{color:var(--red)}
+.tl-label{font-size:10px;color:var(--muted)}
+
+/* PDF preview */
+.pdf-preview{background:#fff;color:#1a1a2e;padding:40px;font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;border-radius:8px}
+.pdf-preview h1{font-size:24px;font-weight:700;color:#1a3a5c;margin-bottom:2px}
+.pdf-preview .sub{color:#888;font-size:11px;margin-bottom:20px}
+.pdf-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:11px}
+.pdf-table th{background:${primaryColor};color:#fff;padding:7px 10px;text-align:left}
+.pdf-table td{padding:6px 10px;border-bottom:0.5px solid #e5e7eb;color:#1a1a2e}
+.pdf-totals{text-align:right;margin-top:10px}
+.pdf-total-row{display:flex;justify-content:flex-end;gap:60px;font-size:12px;padding:2px 0;color:#555}
+.pdf-grand{font-size:15px;font-weight:700;color:${primaryColor};border-top:1.5px solid #1a3a5c;margin-top:6px;padding-top:6px}
+
+/* Sync indicator */
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">QP</div>
+    <h1>QuotePro</h1>
+    <p>ระบบออกใบเสนอราคาออนไลน์<br>เชื่อมต่อ SharePoint · Microsoft 365</p>
+    <button class="btn-ms" onclick="msalLogin()">
+      <svg viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      เข้าสู่ระบบด้วย Microsoft
+    </button>
+    <p style="margin-top:16px;margin-bottom:0;font-size:11px;color:var(--muted)">iT Services Co., Ltd. · SharePoint Integration</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen" class="app" style="display:none">
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <div class="logo-icon">QP</div>
+        <h1>QuotePro</h1>
+      </div>
+      <p><span class="sync-dot"></span>SharePoint Live</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-group">
+        <div class="nav-label">Overview</div>
+        <div class="nav-item active" onclick="showPage('dashboard',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Quotation</div>
+        <div class="nav-item" onclick="showPage('quotes',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+          ใบเสนอราคา
+        </div>
+        <div class="nav-item" onclick="showPage('newquote',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          สร้างใหม่
+        </div>
+        <div class="nav-item" onclick="showPage('approve',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+          อนุมัติ
+          <span class="nav-badge" id="badge-approve">0</span>
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Finance</div>
+        <div class="nav-item" onclick="showPage('payment',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          ติดตามชำระเงิน
+        </div>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Settings</div>
+        <div class="nav-item" onclick="showPage('catalog',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          Catalog สินค้า
+        </div>
+        <div class="nav-item" onclick="showPage('customers',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          ลูกค้า (CRM)
+        </div>
+        <div class="nav-item" onclick="showPage('company',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          ตั้งค่าบริษัท
+        </div>
+        <div class="nav-item" onclick="showPage('settings',this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Approve Settings
+        </div>
+      </div>
+    </nav>
+    <div class="user-section">
+      <div class="user-card">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div style="flex:1;min-width:0">
+          <div class="user-name" id="user-name">กำลังโหลด...</div>
+          <div class="user-role" id="user-email"></div>
+        </div>
+        <button class="btn-logout" onclick="logout()" title="ออกจากระบบ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h2 id="page-title">Dashboard</h2>
+      <button class="btn btn-sm" id="topbar-btn" onclick="showPage('newquote',null)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        สร้างใบเสนอราคา
+      </button>
+      <button class="btn btn-sm" onclick="syncAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Sync
+      </button>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat blue"><div class="stat-label">ใบเสนอราคาทั้งหมด</div><div class="stat-value" id="d-total">—</div><div class="stat-sub">เดือนนี้</div></div>
+          <div class="stat amber"><div class="stat-label">รอการอนุมัติ</div><div class="stat-value" id="d-pending">—</div><div class="stat-sub">รายการ</div></div>
+          <div class="stat green"><div class="stat-label">อนุมัติแล้ว</div><div class="stat-value" id="d-approved">—</div><div class="stat-sub">รายการ</div></div>
+          <div class="stat red"><div class="stat-label">ค้างชำระ</div><div class="stat-value" id="d-unpaid">—</div><div class="stat-sub">รายการ</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <div class="card-header"><h3>ใบเสนอราคาล่าสุด</h3></div>
+            <table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>มูลค่า</th><th>สถานะ</th></tr></thead>
+            <tbody id="d-recent"></tbody></table>
+          </div>
+          <div class="card">
+            <div class="card-header"><h3>รออนุมัติ</h3></div>
+            <table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>มูลค่า</th><th></th></tr></thead>
+            <tbody id="d-approve-list"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUOTES -->
+      <div class="page" id="page-quotes">
+        <div class="filter-row">
+          <select id="f-status" onchange="renderQuotes()"><option value="">ทุกสถานะ</option><option>Draft</option><option>Pending</option><option>Approved</option><option>Rejected</option></select>
+          <div class="spacer"></div>
+          <button class="btn btn-primary btn-sm" onclick="showPage('newquote',null)">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            สร้างใหม่
+          </button>
+        </div>
+        <div class="card">
+          <table><thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>วันที่</th><th>มูลค่า (บาท)</th><th>วิธีชำระ</th><th>สถานะ</th><th>ชำระเงิน</th><th></th></tr></thead>
+          <tbody id="quotes-body"></tbody></table>
+        </div>
+      </div>
+
+      <!-- NEW QUOTE -->
+      <div class="page" id="page-newquote">
+        <div class="card">
+          <div id="edit-banner" style="display:none;align-items:center;gap:10px;padding:10px 16px;background:rgba(251,191,36,0.1);border-bottom:1px solid rgba(251,191,36,0.2);font-size:13px;color:var(--amber)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <span>กำลังแก้ไขใบเสนอราคา <strong class="edit-quote-no"></strong></span>
+            <button class="btn btn-sm" style="margin-left:auto;font-size:11px" onclick="cancelEdit()">ยกเลิกการแก้ไข</button>
+          </div>
+          <div class="card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+            <h3>ข้อมูลใบเสนอราคา</h3>
+            <button class="btn btn-sm" onclick="openCustomerPicker()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              เลือกลูกค้า
+            </button>
+            <button class="btn btn-sm" onclick="openCatalogPicker()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+              เลือกจาก Catalog
+            </button>
+          </div>
+          <div style="padding:16px">
+            <div class="form-grid">
+              <div class="form-group"><label>เลขที่ใบเสนอราคา</label><input id="q-no" readonly style="opacity:0.6"></div>
+              <div class="form-group"><label>วันที่</label><input id="q-date" type="date"></div>
+              <div class="form-group"><label>ชื่อลูกค้า / บริษัท</label><div style="position:relative">
+                <input id="q-client" placeholder="บริษัท / ชื่อลูกค้า" oninput="showClientSuggest(this.value)" autocomplete="off">
+                <div id="client-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:7px;z-index:99;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.3)"></div>
+              </div></div>
+              <div class="form-group"><label>ผู้ติดต่อ</label><input id="q-contact" placeholder="ชื่อผู้ติดต่อ"></div>
+              <div class="form-group"><label>เบอร์โทร</label><input id="q-phone" placeholder="08x-xxx-xxxx"></div>
+              <div class="form-group"><label>อีเมล</label><input id="q-email" placeholder="email@company.com"></div>
+              <div class="form-group"><label>วิธีชำระเงิน</label>
+                <select id="q-payment"><option>เงินสด</option><option>โอนเงิน</option><option>เครดิต 30 วัน</option><option>เครดิต 60 วัน</option><option>Cheque</option></select>
+              </div>
+              <div class="form-group"><label>อายุใบเสนอราคา</label>
+                <select id="q-validity"><option>7 วัน</option><option>14 วัน</option><option>30 วัน</option><option>45 วัน</option><option>60 วัน</option></select>
+              </div>
+              <div class="form-group"><label>วันที่เริ่มสัญญา</label><input id="q-start" type="date"></div>
+              <div class="form-group"><label>วันที่สิ้นสุดสัญญา</label><input id="q-end" type="date"></div>
+              <div class="form-group" style="grid-column:1/-1"><label>ที่อยู่ลูกค้า (สำหรับออกใบ)</label><textarea id="q-cust-address" placeholder="ที่อยู่ลูกค้า..." style="min-height:64px"></textarea></div>
+              <div class="form-group"><label>เลขประจำตัวผู้เสียภาษีลูกค้า</label><input id="q-cust-taxid" placeholder="0000000000000"></div>
+              <div class="form-group"><label>เบอร์โทรลูกค้า</label><input id="q-cust-tel" placeholder="02-xxx-xxxx"></div>
+              <div style="grid-column:1/-1;border-top:1px solid var(--border);padding-top:12px;font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.05em">ข้อมูล Sale</div>
+              <div class="form-group"><label>ชื่อ Sale</label><input id="q-sale-name" placeholder="ชื่อพนักงานขาย"></div>
+              <div class="form-group"><label>เบอร์ Sale</label><input id="q-sale-tel" placeholder="08x-xxx-xxxx"></div>
+              <div class="form-group" style="grid-column:1/-1"><label>Email Sale</label><input id="q-sale-email" placeholder="sale@itservices.co.th"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <h3>รายการสินค้า/บริการ</h3>
+            <button class="btn btn-sm" onclick="addItem()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              เพิ่มรายการ
+            </button>
+          </div>
+          <div style="padding:12px">
+            <div class="items-wrap">
+              <table class="items-table">
+                <thead><tr><th>#</th><th>รายการ</th><th>รายละเอียด</th><th>จำนวน</th><th>หน่วย</th><th>ราคา/หน่วย</th><th>ส่วนลด%</th><th class="num">รวม</th><th></th></tr></thead>
+                <tbody id="items-body"></tbody>
+              </table>
+            </div>
+            <div class="total-box">
+              <div class="total-row"><span>ยอดรวมก่อนส่วนลด</span><span id="t-sub">฿0.00</span></div>
+              <div class="total-row">
+                <span>ส่วนลดรวม (<input id="g-disc" type="number" min="0" max="100" value="0" style="width:45px;background:var(--surface);border:1px solid var(--border2);border-radius:4px;padding:1px 5px;font-size:12px;color:var(--text);font-family:var(--mono)">%)</span>
+                <span id="t-disc">฿0.00</span>
+              </div>
+              <div class="total-row"><span>ยอดหลังส่วนลด</span><span id="t-after">฿0.00</span></div>
+              <div class="total-row"><span>VAT 7%</span><span id="t-vat">฿0.00</span></div>
+              <div class="total-row total-grand"><span>ยอดรวมสุทธิ</span><span id="t-grand">฿0.00</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>หมายเหตุ & เงื่อนไข</h3></div>
+          <div style="padding:16px">
+            <div class="form-grid">
+              <div class="form-group" style="grid-column:1/-1"><label>หมายเหตุ</label><textarea id="q-note" placeholder="ข้อมูลเพิ่มเติม เช่น ระยะเวลาจัดส่ง..."></textarea></div>
+              <div class="form-group" style="grid-column:1/-1"><label>เงื่อนไขการชำระเงิน</label><textarea id="q-terms" placeholder="เงื่อนไขและข้อกำหนด..."></textarea></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approver Box -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            <h3>ผู้อนุมัติ (คำนวณจากมูลค่าใบเสนอราคา)</h3>
+            <button class="btn btn-sm" onclick="showPage('settings',null)" style="font-size:11px">แก้ไข Settings</button>
+          </div>
+          <div style="padding:14px 16px" id="approver-box">
+            <div style="color:var(--muted);font-size:13px">กรอกรายการสินค้าเพื่อดูผู้อนุมัติที่เหมาะสม</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:24px">
+          <button class="btn" onclick="saveQuote('Draft')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            บันทึก Draft
+          </button>
+          <button class="btn btn-warn" onclick="saveQuote('Pending')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            ส่งอนุมัติ
+          </button>
+          <button class="btn btn-primary" onclick="previewPDF()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Preview PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- APPROVE -->
+      <div class="page" id="page-approve">
+        <div id="approve-list"></div>
+      </div>
+
+      <!-- PAYMENT -->
+      <div class="page" id="page-payment">
+        <div id="payment-list"></div>
+      </div>
+
+      <!-- CATALOG -->
+      <div class="page" id="page-catalog">
+        <div class="filter-row">
+          <input id="cat-search" placeholder="ค้นหาสินค้า..." oninput="renderCatalog()" style="flex:1;max-width:280px">
+          <select id="cat-filter" onchange="renderCatalog()"><option value="">ทุกหมวดหมู่</option><option>Hardware</option><option>Software</option><option>Service</option><option>Consumable</option></select>
+          <div class="spacer"></div>
+          <button class="btn btn-primary btn-sm" onclick="openAddProduct()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            เพิ่มสินค้า
+          </button>
+        </div>
+        <div class="cat-grid" id="cat-grid"></div>
+      </div>
+    </div>
+
+      <!-- CUSTOMERS -->
+      <div class="page" id="page-customers">
+        <div class="filter-row">
+          <input id="cust-search" placeholder="ค้นหาลูกค้า..." oninput="renderCustomers()" style="flex:1;max-width:300px">
+          <div class="spacer"></div>
+          <button class="btn btn-primary btn-sm" onclick="openAddCustomer()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            เพิ่มลูกค้าใหม่
+          </button>
+        </div>
+        <div class="card"><table>
+          <thead><tr><th>ชื่อบริษัท / ลูกค้า</th><th>ผู้ติดต่อ</th><th>เบอร์โทร</th><th>Email</th><th>เลขภาษี</th><th>ที่อยู่</th><th></th></tr></thead>
+          <tbody id="customers-body"></tbody>
+        </table></div>
+      </div>
+
+      <!-- COMPANY SETTINGS -->
+      <div class="page" id="page-company">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <!-- Left: Logo & Signature -->
+          <div>
+            <div class="card" style="margin-bottom:14px">
+              <div class="card-header"><h3>Logo บริษัท</h3></div>
+              <div style="padding:16px">
+                <div id="logo-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;overflow:hidden" onclick="document.getElementById('logo-file').click()">
+                  <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลด Logo</span>
+                </div>
+                <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewCompanyImage('logo-file','logo-preview','logo')">
+                <button class="btn btn-sm" onclick="document.getElementById('logo-file').click()">เปลี่ยน Logo</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>ลายเซ็นผู้มีอำนาจ</h3></div>
+              <div style="padding:16px">
+                <div id="sig-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;overflow:hidden" onclick="document.getElementById('sig-file').click()">
+                  <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลดลายเซ็น</span>
+                </div>
+                <input type="file" id="sig-file" accept="image/*" style="display:none" onchange="previewCompanyImage('sig-file','sig-preview','signature')">
+                <button class="btn btn-sm" onclick="document.getElementById('sig-file').click()">เปลี่ยนลายเซ็น</button>
+              </div>
+            </div>
+          </div>
+          <!-- Right: Company Info -->
+          <div>
+            <div class="card" style="margin-bottom:14px">
+              <div class="card-header"><h3>ข้อมูลบริษัท</h3></div>
+              <div style="padding:16px">
+                <div class="form-grid">
+                  <div class="form-group" style="grid-column:1/-1"><label>ชื่อบริษัท</label><input id="co-name" placeholder="บริษัท ... จำกัด"></div>
+                  <div class="form-group"><label>เลขประจำตัวผู้เสียภาษี</label><input id="co-taxid" placeholder="0000000000000"></div>
+                  <div class="form-group"><label>เบอร์โทรศัพท์</label><input id="co-phone" placeholder="02-xxx-xxxx"></div>
+                  <div class="form-group" style="grid-column:1/-1"><label>Email</label><input id="co-email" placeholder="info@company.com"></div>
+                  <div class="form-group" style="grid-column:1/-1"><label>ที่อยู่</label><textarea id="co-address" placeholder="ที่อยู่บริษัท..." style="min-height:72px"></textarea></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:14px">
+              <div class="card-header"><h3>สีหลักของใบเสนอราคา</h3></div>
+              <div style="padding:16px">
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="color-swatches">
+                  <div onclick="selectColor('#1a3a5c')" style="width:32px;height:32px;border-radius:50%;background:#1a3a5c;cursor:pointer;border:2px solid transparent" data-color="#1a3a5c"></div>
+                  <div onclick="selectColor('#1a5276')" style="width:32px;height:32px;border-radius:50%;background:#1a5276;cursor:pointer;border:2px solid transparent" data-color="#1a5276"></div>
+                  <div onclick="selectColor('#145a32')" style="width:32px;height:32px;border-radius:50%;background:#145a32;cursor:pointer;border:2px solid transparent" data-color="#145a32"></div>
+                  <div onclick="selectColor('#6e2f8f')" style="width:32px;height:32px;border-radius:50%;background:#6e2f8f;cursor:pointer;border:2px solid transparent" data-color="#6e2f8f"></div>
+                  <div onclick="selectColor('#7b241c')" style="width:32px;height:32px;border-radius:50%;background:#7b241c;cursor:pointer;border:2px solid transparent" data-color="#7b241c"></div>
+                  <div onclick="selectColor('#1a252f')" style="width:32px;height:32px;border-radius:50%;background:#1a252f;cursor:pointer;border:2px solid transparent" data-color="#1a252f"></div>
+                  <input type="color" id="co-color" value="#1a3a5c" oninput="selectColor(this.value)" style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;padding:0">
+                </div>
+                <div style="margin-top:10px;font-size:12px;color:var(--muted)">สีที่เลือก: <span id="co-color-label" style="font-family:var(--mono)">#1a3a5c</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><h3>Footer / เงื่อนไขมาตรฐาน</h3></div>
+              <div style="padding:16px">
+                <div class="form-group"><label>ข้อความ Footer</label><textarea id="co-footer" placeholder="เงื่อนไขและข้อกำหนดมาตรฐาน..." style="min-height:80px"></textarea></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;margin-bottom:24px">
+          <button class="btn btn-primary" onclick="saveCompanySettings()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            บันทึกตั้งค่าบริษัท
+          </button>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="page" id="page-settings">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <h3>ระดับการอนุมัติตามมูลค่าใบเสนอราคา</h3>
+            <button class="btn btn-primary btn-sm" onclick="addApprovalTier()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              เพิ่มระดับ
+            </button>
+          </div>
+          <div style="padding:16px">
+            <div style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:var(--accent2)">
+              <strong>วิธีใช้:</strong> กำหนดวงเงินและ Email ผู้อนุมัติแต่ละระดับ — เมื่อทีมขายส่งใบเสนอราคา ระบบจะแสดงชื่อผู้อนุมัติที่ถูกต้องอัตโนมัติ
+            </div>
+            <table>
+              <thead><tr><th>#</th><th>ชื่อระดับ</th><th>วงเงิน (บาท) ตั้งแต่</th><th>ถึง</th><th>ชื่อผู้อนุมัติ</th><th>Email ผู้อนุมัติ</th><th></th></tr></thead>
+              <tbody id="tiers-body"></tbody>
+            </table>
+            <div style="display:flex;justify-content:flex-end;margin-top:14px">
+              <button class="btn btn-primary" onclick="saveApprovalTiers()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                บันทึก Settings
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+  </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div class="overlay" id="catalog-modal">
+  <div class="modal">
+    <div class="modal-header"><h3>เลือกสินค้าจาก Catalog</h3><button class="btn btn-sm" onclick="closeModal('catalog-modal')">✕</button></div>
+    <div class="modal-body">
+      <input id="cat-modal-search" placeholder="ค้นหา..." oninput="renderModalCatalog()" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--text);margin-bottom:12px;outline:none;font-family:var(--font)">
+      <div class="cat-grid" id="cat-modal-grid" style="grid-template-columns:repeat(2,1fr)"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="product-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="pm-title">เพิ่มสินค้าใหม่</h3><button class="btn btn-sm" onclick="closeModal('product-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>ชื่อสินค้า</label><input id="np-name" placeholder="ชื่อสินค้า"></div>
+        <div class="form-group"><label>รหัสสินค้า (SKU)</label><input id="np-sku" placeholder="SKU-001"></div>
+        <div class="form-group"><label>ราคา (บาท)</label><input id="np-price" type="number" placeholder="0.00"></div>
+        <div class="form-group"><label>หน่วย</label><input id="np-unit" placeholder="ชิ้น / ชุด / ชั่วโมง"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>หมวดหมู่</label>
+          <select id="np-cat"><option>Hardware</option><option>Software</option><option>Service</option><option>Consumable</option></select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1"><label>รายละเอียด</label><textarea id="np-desc" placeholder="รายละเอียดสินค้า..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('product-modal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveProduct()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="approve-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="am-title">รายละเอียดใบเสนอราคา</h3><button class="btn btn-sm" onclick="closeModal('approve-modal')">✕</button></div>
+    <div class="modal-body" id="am-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('approve-modal')">ปิด</button>
+      <button class="btn btn-danger" onclick="doApprove('Rejected')">✕ ปฏิเสธ</button>
+      <button class="btn btn-success" onclick="doApprove('Approved')">✓ อนุมัติ</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="payment-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="pay-title">บันทึกการชำระเงิน</h3><button class="btn btn-sm" onclick="closeModal('payment-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group"><label>จำนวนเงิน (บาท)</label><input id="pay-amount" type="number" placeholder="0.00"></div>
+        <div class="form-group"><label>วันที่รับชำระ</label><input id="pay-date" type="date"></div>
+        <div class="form-group"><label>วิธีชำระ</label>
+          <select id="pay-method"><option>เงินสด</option><option>โอนเงิน</option><option>Cheque</option></select>
+        </div>
+        <div class="form-group"><label>เลขอ้างอิง</label><input id="pay-ref" placeholder="เลขโอน / เลข Cheque"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>หมายเหตุ</label><textarea id="pay-note"></textarea></div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label>สลิปการโอน / หลักฐานการชำระ</label>
+          <div id="slip-drop-zone" onclick="document.getElementById('slip-file').click()" style="border:1.5px dashed var(--border2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--surface2)"
+            ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+            ondragleave="this.style.borderColor='var(--border2)'"
+            ondrop="handleSlipDrop(event)">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5" style="display:block;margin:0 auto 8px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div id="slip-label" style="font-size:13px;color:var(--muted)">คลิกหรือลากไฟล์มาวางที่นี่</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">รองรับ JPG, PNG, PDF (ขนาดสูงสุด 5MB)</div>
+          </div>
+          <input type="file" id="slip-file" accept="image/*,.pdf" style="display:none" onchange="handleSlipSelect(this)">
+          <div id="slip-preview" style="display:none;margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('payment-modal')">ยกเลิก</button>
+      <button class="btn btn-success" onclick="savePayment()">บันทึกการชำระ</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER PICKER MODAL (for quote) -->
+<div class="overlay" id="customer-picker-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <h3>เลือกลูกค้า</h3>
+      <button class="btn btn-sm" onclick="closeModal('customer-picker-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input id="cust-picker-search" placeholder="ค้นหาชื่อบริษัท / ผู้ติดต่อ..." oninput="renderCustomerPicker()"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--text);margin-bottom:12px;outline:none;font-family:var(--font)">
+      <div id="customer-picker-list"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);text-align:center">
+        <button class="btn btn-sm btn-primary" onclick="closeModal('customer-picker-modal');openAddCustomer()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          เพิ่มลูกค้าใหม่
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER MODAL -->
+<div class="overlay" id="customer-modal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="cm-title">เพิ่มลูกค้าใหม่</h3><button class="btn btn-sm" onclick="closeModal('customer-modal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1"><label>ชื่อบริษัท / ชื่อลูกค้า</label><input id="cu-name" placeholder="บริษัท ... จำกัด"></div>
+        <div class="form-group"><label>ผู้ติดต่อ</label><input id="cu-contact" placeholder="ชื่อผู้ติดต่อ"></div>
+        <div class="form-group"><label>เลขประจำตัวผู้เสียภาษี</label><input id="cu-taxid" placeholder="0000000000000"></div>
+        <div class="form-group"><label>เบอร์โทร</label><input id="cu-phone" placeholder="08x-xxx-xxxx"></div>
+        <div class="form-group"><label>Email</label><input id="cu-email" placeholder="email@company.com"></div>
+        <div class="form-group" style="grid-column:1/-1"><label>ที่อยู่สำหรับออกใบเสนอราคา</label><textarea id="cu-address" placeholder="ที่อยู่..." style="min-height:80px"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('customer-modal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveCustomer()">บันทึกลูกค้า</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="pdf-modal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3>Preview ใบเสนอราคา</h3><button class="btn btn-sm" onclick="closeModal('pdf-modal')">✕</button></div>
+    <div class="modal-body"><div id="pdf-content"></div></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('pdf-modal')">ปิด</button>
+      <button class="btn btn-primary" onclick="exportPDF()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ============================================================
+// CONFIG — SharePoint
+// ============================================================
+const CONFIG = {
+  clientId: '2ca0b112-a5e8-4fce-ac28-3b30339c28ba',
+  tenantId: 'd569b991-89fc-4a62-9df5-eb361abcef40',
+  siteId:   'rpaexpert.sharepoint.com,2e0b6ac1-bb7e-48e6-adae-24759295ccc9,4a7d2586-07de-4bb8-a691-1626da038b77',
+  lists: {
+    catalog:    '4d8e0adf-b557-47e4-b6f9-3f26bea19160',
+    quotations: 'b9eedc83-5af4-47ae-b9d0-1d71faa3cb16',
+    quoteItems: '82c2a355-1e4f-4789-a9a2-7a32c9547624',
+    approvals:  'ca42ee5a-365d-4ba1-8ffb-a4a5e8f5f8f1',
+    payments:   'c9305d89-8e8d-4a53-89f7-0cbdfa6a1e41',
+    settings:   '306e82e7-eb31-4f01-afa6-64daafa6c4d7',
+    customers:  '488c81b6-872e-4e9f-9b33-0f2b0e5cb7d1',
+    company:    'f871327e-833a-475d-aa9f-65a899c0e0a0'
+  },
+  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read']
+};
+
+// ============================================================
+// AUTH — MSAL (popup flow)
+// ============================================================
+let accessToken = null;
+let currentUser = null;
+let currentApproveId = null;
+let currentPaymentQuoteId = null;
+let quoteItems = [];
+let editingQuoteId = null;
+let catalogData = [];
+let quotesData = [];
+let editingProductId = null;
+
+function msalLogin() {
+  const authUrl = `https://login.microsoftonline.com/${CONFIG.tenantId}/oauth2/v2.0/authorize?`
+    + `client_id=${CONFIG.clientId}`
+    + `&response_type=token`
+    + `&redirect_uri=${encodeURIComponent('https://darmmunginsa.github.io/quotepro/index.html')}`
+    + `&scope=${encodeURIComponent(CONFIG.scopes.join(' '))}`
+    + `&response_mode=fragment`
+    + `&nonce=${Math.random().toString(36).slice(2)}`;
+
+  const popup = window.open(authUrl, 'mslogin', 'width=520,height=640,left=200,top=100');
+  const timer = setInterval(() => {
+    try {
+      const url = popup.location.href;
+      if (url.includes('access_token=')) {
+        clearInterval(timer);
+        popup.close();
+        const hash = url.split('#')[1] || url.split('?')[1] || '';
+        const params = new URLSearchParams(hash);
+        accessToken = params.get('access_token');
+        if (accessToken) { afterLogin(); }
+        else { toast('ไม่สามารถรับ token ได้', 'error'); }
+      }
+    } catch(e) {}
+    if (popup.closed) clearInterval(timer);
+  }, 500);
+}
+
+async function afterLogin() {
+  try {
+    const res = await graphGet('https://graph.microsoft.com/v1.0/me');
+    currentUser = res;
+    document.getElementById('user-name').textContent = res.displayName || res.userPrincipalName;
+    document.getElementById('user-email').textContent = res.userPrincipalName;
+    document.getElementById('user-avatar').textContent = (res.displayName || 'U')[0].toUpperCase();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'flex';
+    initNewQuote();
+    await syncAll();
+  } catch(e) {
+    toast('Login ไม่สำเร็จ: ' + e.message, 'error');
+  }
+}
+
+function logout() {
+  accessToken = null; currentUser = null;
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+// ============================================================
+// GRAPH API HELPERS
+// ============================================================
+const BASE = `https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/lists`;
+
+async function graphGet(url) {
+  const r = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function graphPost(url, body) {
+  const r = await fetch(url, {
+    method: 'POST', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function graphPatch(url, body) {
+  const r = await fetch(url, {
+    method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function graphDelete(url) {
+  await fetch(url, { method: 'DELETE', headers: { Authorization: 'Bearer ' + accessToken } });
+}
+
+async function getListItems(listId, select='') {
+  const url = `${BASE}/${listId}/items?expand=fields${select ? '&$select='+select : ''}`;
+  const res = await graphGet(url);
+  return (res.value || []).map(i => ({ id: i.id, ...i.fields }));
+}
+
+async function createListItem(listId, fields) {
+  return graphPost(`${BASE}/${listId}/items`, { fields });
+}
+
+async function updateListItem(listId, itemId, fields) {
+  return graphPatch(`${BASE}/${listId}/items/${itemId}/fields`, fields);
+}
+
+async function deleteListItem(listId, itemId) {
+  return graphDelete(`${BASE}/${listId}/items/${itemId}`);
+}
+
+// ============================================================
+// SYNC
+// ============================================================
+async function syncAll() {
+  toast('กำลัง Sync กับ SharePoint...', 'info');
+  try {
+    [catalogData, quotesData] = await Promise.all([
+      getListItems(CONFIG.lists.catalog),
+      getListItems(CONFIG.lists.quotations)
+    ]);
+    await loadApprovalTiers();
+    await loadCompanySettings();
+    renderDash();
+    renderQuotes();
+    renderCatalog();
+    renderApprove();
+    renderPayment();
+    updateBadge();
+    toast('Sync สำเร็จ', 'success');
+  } catch(e) {
+    toast('Sync ไม่สำเร็จ: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
+// PAGES
+// ============================================================
+const pageTitles = {dashboard:'Dashboard',quotes:'ใบเสนอราคา',newquote:'สร้างใบเสนอราคาใหม่',approve:'รออนุมัติ',payment:'ติดตามการชำระเงิน',catalog:'Catalog สินค้า',settings:'Approve Settings',customers:'ลูกค้า (CRM)',company:'ตั้งค่าบริษัท'};
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[id] || id;
+  if (id === 'newquote') { if (!editingQuoteId) initNewQuote(); setTimeout(updateApproverBox, 200); }
+  if (id === 'approve') renderApprove();
+  if (id === 'payment') renderPayment();
+  if (id === 'settings') setTimeout(renderTiers, 50);
+  if (id === 'customers') { loadCustomers().then(renderCustomers); }
+  if (id === 'company') { loadCompanySettings().then(renderCompanySettingsForm); }
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDash() {
+  const pending = quotesData.filter(q => q.Status === 'Pending');
+  const approved = quotesData.filter(q => q.Status === 'Approved');
+  document.getElementById('d-total').textContent = quotesData.length;
+  document.getElementById('d-pending').textContent = pending.length;
+  document.getElementById('d-approved').textContent = approved.length;
+  const unpaidCount = quotesData.filter(q => q.Status === 'Approved').length;
+  document.getElementById('d-unpaid').textContent = unpaidCount;
+
+  document.getElementById('d-recent').innerHTML = quotesData.slice(-5).reverse().map(q =>
+    `<tr><td style="font-family:var(--mono);font-size:12px">${q.Title||''}</td><td>${q.ClientName||''}</td><td style="font-family:var(--mono);font-size:12px">${fmt(q.TotalAmount||0)}</td><td>${statusBadge(q.Status)}</td></tr>`
+  ).join('') || '<tr><td colspan=4 class="empty">ยังไม่มีข้อมูล</td></tr>';
+
+  document.getElementById('d-approve-list').innerHTML = pending.map(q =>
+    `<tr><td style="font-family:var(--mono);font-size:12px">${q.Title||''}</td><td>${q.ClientName||''}</td><td style="font-family:var(--mono);font-size:12px">${fmt(q.TotalAmount||0)}</td>
+    <td><button class="btn btn-xs btn-warn" onclick="openApproveModal('${q.id}')">ตรวจสอบ</button></td></tr>`
+  ).join('') || '<tr><td colspan=4 class="empty">ไม่มีรายการรออนุมัติ</td></tr>';
+}
+
+function updateBadge() {
+  const n = quotesData.filter(q => q.Status === 'Pending').length;
+  document.getElementById('badge-approve').textContent = n;
+}
+
+// ============================================================
+// QUOTES LIST
+// ============================================================
+function renderQuotes() {
+  const sf = document.getElementById('f-status')?.value || '';
+  const filtered = quotesData.filter(q => !sf || q.Status === sf);
+  document.getElementById('quotes-body').innerHTML = filtered.length ? filtered.map(q => `
+    <tr>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:500">${q.Title||''}</td>
+      <td>${q.ClientName||''}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted)">${(q.QuoteDate||'').split('T')[0]}</td>
+      <td style="font-family:var(--mono);font-size:12px">${fmt(q.TotalAmount||0)}</td>
+      <td>${q.PaymentMethod||''}</td>
+      <td>${statusBadge(q.Status)}</td>
+      <td>${payBadge(q)}</td>
+      <td style="display:flex;gap:4px">
+        <button class="action-btn" onclick="openApproveModal('${q.id}')" title="ดูรายละเอียด">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        ${q.Status !== 'Approved' ? `<button class="action-btn" style="color:var(--accent2)" onclick="editQuote('${q.id}')" title="แก้ไข">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>` : ''}
+        <button class="action-btn" onclick="showPDFForQuote('${q.id}')" title="PDF">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </button>
+        <button class="action-btn" style="color:var(--green)" onclick="openPaymentModal('${q.id}')" title="บันทึกชำระ">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        </button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan=8 style="text-align:center;padding:32px;color:var(--muted)">ยังไม่มีข้อมูล</td></tr>';
+}
+
+// ============================================================
+// NEW QUOTE
+// ============================================================
+function initNewQuote() {
+  const n = quotesData.length + 1;
+  document.getElementById('q-no').value = 'QT-' + new Date().getFullYear() + '-' + String(n).padStart(3,'0');
+  document.getElementById('q-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('q-client').value = '';
+  document.getElementById('q-contact').value = '';
+  document.getElementById('q-phone').value = '';
+  document.getElementById('q-email').value = '';
+  document.getElementById('q-cust-address').value = '';
+  document.getElementById('q-cust-taxid').value = '';
+  document.getElementById('q-cust-tel').value = '';
+  document.getElementById('q-start').value = '';
+  document.getElementById('q-end').value = '';
+  document.getElementById('q-sale-name').value = currentUser?.displayName||'';
+  document.getElementById('q-sale-email').value = currentUser?.userPrincipalName||'';
+  document.getElementById('q-sale-tel').value = '';
+  document.getElementById('q-note').value = '';
+  document.getElementById('q-terms').value = companySettings?.FooterText||'ชำระภายใน 30 วันนับจากวันรับสินค้า';
+  quoteItems = [];
+  addItem(); addItem();
+}
+
+function addItem(p = null) {
+  quoteItems.push({ id: Date.now(), name: p ? p.Title : '', desc: '', qty: 1, unit: p ? (p.Unit||'ชิ้น') : 'ชิ้น', price: p ? (p.Price||0) : 0, disc: 0 });
+  renderItems();
+}
+
+function removeItem(id) { quoteItems = quoteItems.filter(i => i.id !== id); renderItems(); }
+
+function updateItem(id, field, val) {
+  const it = quoteItems.find(i => i.id === id);
+  if (!it) return;
+  it[field] = (field === 'name' || field === 'unit') ? val : +val;
+  // For number fields, update line total immediately
+  if (field !== 'name' && field !== 'unit') {
+    const row = document.querySelector(`#items-body tr[data-id="${id}"]`);
+    if (row) row.querySelector('.line-total').textContent = fmt(lineTotal(it));
+    calcTotals();
+    updateApproverBox();
+  }
+}
+
+function lineTotal(it) { return it.qty * it.price * (1 - it.disc / 100); }
+
+function renderItems() {
+  const existingIds = [...document.querySelectorAll('#items-body tr[data-id]')].map(r => +r.dataset.id);
+  const newIds = quoteItems.map(i => i.id);
+  const needFullRender = existingIds.join(',') !== newIds.join(',');
+
+  if (needFullRender) {
+    document.getElementById('items-body').innerHTML = quoteItems.map((it, i) => `
+      <tr data-id="${it.id}">
+        <td style="text-align:center;color:var(--muted);font-size:11px;width:28px">${i+1}</td>
+        <td>
+          <input value="${escHtml(it.name)}" onchange="updateItemText(${it.id},'name',this.value)" placeholder="ชื่อรายการ..." style="min-width:160px;margin-bottom:3px">
+          <textarea onchange="updateItemText(${it.id},'desc',this.value)" placeholder="รายละเอียดเพิ่มเติม..." style="width:100%;min-height:44px;resize:vertical;background:var(--surface2);border:1px solid transparent;border-radius:5px;padding:4px 8px;font-size:11px;color:var(--muted);font-family:var(--font)">${escHtml(it.desc||'')}</textarea>
+        </td>
+        <td style="width:70px"><input type="number" value="${it.qty}" min="1" oninput="updateItemNum(${it.id},'qty',+this.value)"></td>
+        <td style="width:70px"><input value="${escHtml(it.unit)}" onchange="updateItemText(${it.id},'unit',this.value)"></td>
+        <td style="width:110px"><input type="number" value="${it.price}" oninput="updateItemNum(${it.id},'price',+this.value)" style="text-align:right"></td>
+        <td style="width:70px"><input type="number" value="${it.disc}" min="0" max="100" oninput="updateItemNum(${it.id},'disc',+this.value)" style="text-align:right"></td>
+        <td style="text-align:right;font-family:var(--mono);font-size:12px;white-space:nowrap;color:var(--accent2);padding-right:8px" class="line-total">${fmt(lineTotal(it))}</td>
+        <td style="width:32px"><button class="action-btn" onclick="removeItem(${it.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></td>
+      </tr>`).join('');
+  } else {
+    quoteItems.forEach(it => {
+      const row = document.querySelector(`#items-body tr[data-id="${it.id}"]`);
+      if (row) row.querySelector('.line-total').textContent = fmt(lineTotal(it));
+    });
+  }
+  calcTotals();
+  updateApproverBox();
+}
+
+function updateItemText(id, field, val) {
+  const it = quoteItems.find(i => i.id === id);
+  if (it) it[field] = val;
+}
+
+function updateItemNum(id, field, val) {
+  const it = quoteItems.find(i => i.id === id);
+  if (!it) return;
+  it[field] = val;
+  const row = document.querySelector(`#items-body tr[data-id="${id}"]`);
+  if (row) row.querySelector('.line-total').textContent = fmt(lineTotal(it));
+  calcTotals();
+  updateApproverBox();
+}
+
+
+function calcTotals() {
+  const sub = quoteItems.reduce((a, i) => a + lineTotal(i), 0);
+  const gd = +(document.getElementById('g-disc').value) || 0;
+  const discAmt = sub * gd / 100;
+  const after = sub - discAmt;
+  const vat = after * 0.07;
+  const grand = after + vat;
+  document.getElementById('t-sub').textContent = fmt(sub);
+  document.getElementById('t-disc').textContent = fmt(discAmt);
+  document.getElementById('t-after').textContent = fmt(after);
+  document.getElementById('t-vat').textContent = fmt(vat);
+  document.getElementById('t-grand').textContent = fmt(grand);
+  return { sub, discAmt, after, vat, grand };
+}
+// Update approver box whenever totals change
+function calcTotalsAndApprover() {
+  const t = calcTotals();
+  updateApproverBox();
+  return t;
+}
+document.getElementById('g-disc')?.addEventListener('input', calcTotals);
+
+// ============================================================
+// EDIT QUOTE
+// ============================================================
+async function editQuote(id) {
+  const q = quotesData.find(x => x.id === id);
+  if (!q) return;
+  editingQuoteId = id;
+
+  // Load quote items from SharePoint
+  toast('กำลังโหลดข้อมูล...', 'info');
+  try {
+    const allItems = await getListItems(CONFIG.lists.quoteItems);
+    const items = allItems.filter(i => String(i.QuoteID) === String(id));
+    quoteItems = items.map(it => ({
+      id: it.id || Date.now() + Math.random(),
+      spId: it.id,
+      name: it.Title || '',
+      desc: it.Description || '',
+      qty: it.Quantity || 1,
+      unit: it.Unit || 'ชิ้น',
+      price: it.UnitPrice || 0,
+      disc: it.DiscountPct || 0
+    }));
+  } catch(e) {
+    quoteItems = [];
+  }
+
+  if (quoteItems.length === 0) { addItem(); addItem(); }
+
+  // Go to newquote page first (editingQuoteId already set, so initNewQuote will be skipped)
+  showPage('newquote', null);
+
+  // Fill form fields AFTER page is shown
+  setTimeout(() => {
+    document.getElementById('q-no').value = q.Title || '';
+    document.getElementById('q-date').value = (q.QuoteDate||'').split('T')[0] || new Date().toISOString().split('T')[0];
+    document.getElementById('q-client').value = q.ClientName || '';
+    document.getElementById('q-contact').value = q.ContactPerson || '';
+    document.getElementById('q-phone').value = q.Phone || '';
+    document.getElementById('q-email').value = q.Email || '';
+    document.getElementById('q-payment').value = q.PaymentMethod || 'เงินสด';
+    document.getElementById('q-note').value = q.Note || '';
+    document.getElementById('q-terms').value = q.Terms || '';
+
+    // Show edit banner
+    const editBanner = document.getElementById('edit-banner');
+    if (editBanner) {
+      editBanner.style.display = 'flex';
+      editBanner.querySelector('.edit-quote-no').textContent = q.Title || '';
+    }
+
+    // Force full re-render of items
+    document.getElementById('items-body').innerHTML = '';
+    renderItems();
+    updateApproverBox();
+    toast('โหลดข้อมูลสำเร็จ — แก้ไขได้เลย', 'success');
+  }, 50);
+}
+
+// ============================================================
+// SAVE QUOTE → SharePoint
+// ============================================================
+function cancelEdit() {
+  editingQuoteId = null;
+  const editBanner = document.getElementById('edit-banner');
+  if (editBanner) editBanner.style.display = 'none';
+  initNewQuote();
+}
+
+async function saveQuote(status) {
+  if (!accessToken) { toast('กรุณา Login ก่อน', 'error'); return; }
+  const t = calcTotals();
+  const fields = {
+    Title: document.getElementById('q-no').value,
+    ClientName: document.getElementById('q-client').value || '(ไม่ระบุ)',
+    ContactPerson: document.getElementById('q-contact').value,
+    Phone: document.getElementById('q-phone').value,
+    Email: document.getElementById('q-email').value,
+    QuoteDate: document.getElementById('q-date').value,
+    PaymentMethod: document.getElementById('q-payment').value,
+    SubTotal: t.sub,
+    DiscountPct: +(document.getElementById('g-disc').value)||0,
+    TotalAmount: t.grand,
+    Status: status,
+    ApproverEmail: (getApproverForAmount(t.grand)||{}).approverEmail||'',
+    ApproverName: (getApproverForAmount(t.grand)||{}).approverName||'',
+    Note: document.getElementById('q-note').value,
+    Terms: document.getElementById('q-terms').value,
+    SaleName: document.getElementById('q-sale-name').value||'',
+    SaleTel: document.getElementById('q-sale-tel').value||'',
+    SaleEmail: document.getElementById('q-sale-email').value||'',
+    CustomerAddress: document.getElementById('q-cust-address').value||'',
+    CustomerTaxID: document.getElementById('q-cust-taxid').value||'',
+    CustomerTel: document.getElementById('q-cust-tel').value||'',
+    ContractStartDate: document.getElementById('q-start').value||null,
+    ContractEndDate: document.getElementById('q-end').value||null
+  };
+  try {
+    toast('กำลังบันทึก...', 'info');
+    let quoteId;
+    if (editingQuoteId) {
+      // UPDATE existing quote
+      await updateListItem(CONFIG.lists.quotations, editingQuoteId, fields);
+      quoteId = editingQuoteId;
+      // Delete old line items and re-create
+      const oldItems = await getListItems(CONFIG.lists.quoteItems);
+      const toDelete = oldItems.filter(i => String(i.QuoteID) === String(quoteId));
+      for (const it of toDelete) {
+        await deleteListItem(CONFIG.lists.quoteItems, it.id);
+      }
+    } else {
+      // CREATE new quote
+      const created = await createListItem(CONFIG.lists.quotations, fields);
+      quoteId = created.id;
+    }
+    // Save line items
+    for (const it of quoteItems) {
+      if (!it.name) continue;
+      await createListItem(CONFIG.lists.quoteItems, {
+        Title: it.name, QuoteID: +quoteId, Quantity: it.qty,
+        Unit: it.unit, UnitPrice: it.price, DiscountPct: it.disc, LineTotal: lineTotal(it),
+        Description: it.desc||''
+      });
+    }
+    editingQuoteId = null;
+    const editBanner = document.getElementById('edit-banner');
+    if (editBanner) editBanner.style.display = 'none';
+    toast(`${editingQuoteId?'แก้ไข':'บันทึก'} ${fields.Title} สำเร็จ${status==='Pending'?' — ส่งอนุมัติแล้ว':''}`, 'success');
+    await syncAll();
+    showPage('quotes', null);
+  } catch(e) {
+    toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+  }
+}
+
+// ============================================================
+// APPROVE
+// ============================================================
+function renderApprove() {
+  const pending = quotesData.filter(q => q.Status === 'Pending');
+  document.getElementById('approve-list').innerHTML = pending.length ? pending.map(q => `
+    <div class="card" style="margin-bottom:10px">
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <span style="font-family:var(--mono);font-size:13px;font-weight:500">${q.Title||''}</span>
+          <span style="color:var(--muted);font-size:13px;flex:1">${q.ClientName||''}</span>
+          <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--accent2)">${fmt(q.TotalAmount||0)}</span>
+          ${statusBadge(q.Status)}
+        </div>
+        <div class="timeline">
+          <div class="tl-step"><div class="tl-dot done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div class="tl-label">สร้าง</div></div>
+          <div class="tl-step"><div class="tl-dot done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div><div class="tl-label">ส่งรีวิว</div></div>
+          <div class="tl-step"><div class="tl-dot active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="tl-label">รออนุมัติ</div></div>
+          <div class="tl-step"><div class="tl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="tl-label">อนุมัติ</div></div>
+          <div class="tl-step"><div class="tl-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div><div class="tl-label">ส่งลูกค้า</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-sm" onclick="openApproveModal('${q.id}')">ดูรายละเอียด</button>
+          <button class="btn btn-sm btn-danger" onclick="quickApprove('${q.id}','Rejected')">✕ ปฏิเสธ</button>
+          <button class="btn btn-sm btn-success" onclick="quickApprove('${q.id}','Approved')">✓ อนุมัติ</button>
+        </div>
+      </div>
+    </div>`).join('') : '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>ไม่มีรายการรออนุมัติ</div>';
+}
+
+function openApproveModal(id) {
+  currentApproveId = id;
+  const q = quotesData.find(x => x.id === id);
+  if (!q) return;
+
+  // Check if current user is the designated approver
+  const myEmail = (currentUser?.userPrincipalName || '').toLowerCase();
+  const approverEmail = (q.ApproverEmail || '').toLowerCase();
+  const isApprover = approverEmail && myEmail && approverEmail === myEmail;
+  const isPending = q.Status === 'Pending';
+
+  document.getElementById('am-title').textContent = q.Title || '';
+  document.getElementById('am-body').innerHTML = `
+    <div class="form-grid">
+      <div class="form-group"><label>ลูกค้า</label><input value="${escHtml(q.ClientName||'')}" readonly></div>
+      <div class="form-group"><label>มูลค่า</label><input value="${fmt(q.TotalAmount||0)}" readonly></div>
+      <div class="form-group"><label>วิธีชำระ</label><input value="${escHtml(q.PaymentMethod||'')}" readonly></div>
+      <div class="form-group"><label>สถานะปัจจุบัน</label><div style="padding:7px 0">${statusBadge(q.Status)}</div></div>
+      <div class="form-group"><label>ผู้อนุมัติที่กำหนด</label><input value="${escHtml(q.ApproverName||q.ApproverEmail||'(ไม่ได้ระบุ)')}" readonly></div>
+      <div class="form-group"><label>ผู้ใช้ปัจจุบัน</label><input value="${escHtml(currentUser?.displayName||'')} (${escHtml(currentUser?.userPrincipalName||'')})" readonly></div>
+    </div>
+    ${isPending && !isApprover ? `
+    <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--red);display:flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      คุณไม่ใช่ผู้อนุมัติที่กำหนดไว้สำหรับใบนี้ — ต้องให้ <strong style="margin:0 4px">${escHtml(q.ApproverName||q.ApproverEmail||'')}</strong> เป็นผู้อนุมัติ
+    </div>` : ''}
+    ${isPending && isApprover ? `
+    <div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--green);display:flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      คุณเป็นผู้อนุมัติที่กำหนดไว้ — สามารถอนุมัติหรือปฏิเสธได้
+    </div>` : ''}
+    <div class="form-group"><label>หมายเหตุผู้อนุมัติ</label><textarea id="approve-comment" placeholder="ระบุเหตุผล (ถ้ามี)..." style="min-height:80px"></textarea></div>`;
+
+  // Store isApprover flag for doApprove to check
+  document.getElementById('approve-modal').dataset.canApprove = (isApprover && isPending) ? '1' : '0';
+
+  // Hide/show approve buttons based on permission
+  const footer = document.querySelector('#approve-modal .modal-footer');
+  if (footer) {
+    const rejectBtn = footer.querySelector('.btn-danger');
+    const approveBtn = footer.querySelector('.btn-success');
+    if (rejectBtn) rejectBtn.style.display = (isApprover && isPending) ? '' : 'none';
+    if (approveBtn) approveBtn.style.display = (isApprover && isPending) ? '' : 'none';
+  }
+
+  openModal('approve-modal');
+}
+
+async function doApprove(status) {
+  if (!currentApproveId) return;
+  // Double-check permission
+  const canApprove = document.getElementById('approve-modal')?.dataset.canApprove === '1';
+  if (!canApprove) { toast('คุณไม่มีสิทธิ์อนุมัติใบนี้', 'error'); return; }
+  const comment = document.getElementById('approve-comment')?.value || '';
+  try {
+    toast('กำลังอัปเดต...', 'info');
+    await updateListItem(CONFIG.lists.quotations, currentApproveId, { Status: status });
+    try {
+      await createListItem(CONFIG.lists.approvals, {
+        Title: quotesData.find(q=>q.id===currentApproveId)?.Title||'',
+        QuotelD: +currentApproveId, ApproveStatus: status,
+        Comment: comment, ApprovedDate: new Date().toISOString(),
+        ApproverEmail: currentUser?.userPrincipalName||''
+      });
+    } catch(e2) { console.warn('Approvals log skipped:', e2.message); }
+    closeModal('approve-modal');
+    toast(`${status==='Approved'?'✓ อนุมัติ':'✗ ปฏิเสธ'}เรียบร้อย`, 'success');
+    await syncAll();
+  } catch(e) { toast('ไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+async function quickApprove(id, status) {
+  const q = quotesData.find(x => x.id === id);
+  if (!q) return;
+  const myEmail = (currentUser?.userPrincipalName || '').toLowerCase();
+  const approverEmail = (q.ApproverEmail || '').toLowerCase();
+  if (approverEmail && myEmail !== approverEmail) {
+    toast(`เฉพาะ ${q.ApproverName||q.ApproverEmail} เท่านั้นที่อนุมัติได้`, 'error');
+    return;
+  }
+  currentApproveId = id;
+  // Set canApprove flag
+  const modal = document.getElementById('approve-modal');
+  if (modal) modal.dataset.canApprove = '1';
+  await doApprove(status);
+}
+
+// ============================================================
+// PAYMENT
+// ============================================================
+function renderPayment() {
+  document.getElementById('payment-list').innerHTML = quotesData.map(q => {
+    const pct = Math.min(100, Math.round(((q.PaidAmount||0)/(q.TotalAmount||1))*100));
+    const rem = (q.TotalAmount||0) - (q.PaidAmount||0);
+    return `<div class="card" style="margin-bottom:10px">
+      <div style="padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-family:var(--mono);font-size:13px;font-weight:500">${q.Title||''}</span>
+          <span style="color:var(--muted);font-size:13px;flex:1">${q.ClientName||''} · ${q.PaymentMethod||''}</span>
+          ${payBadge(q)}
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${pct===100?'var(--green)':pct>0?'var(--amber)':'var(--red)'}"></div></div>
+        <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);margin-top:6px;align-items:center">
+          <span>รวม: <span style="color:var(--text);font-family:var(--mono)">${fmt(q.TotalAmount||0)}</span></span>
+          <span>ชำระแล้ว: <span style="color:var(--green);font-family:var(--mono)">${fmt(q.PaidAmount||0)}</span></span>
+          <span>คงเหลือ: <span style="color:${rem>0?'var(--red)':'var(--green)'};font-family:var(--mono)">${fmt(rem)}</span></span>
+          <div style="margin-left:auto">
+            ${rem > 0 ? `<button class="btn btn-sm btn-success" onclick="openPaymentModal('${q.id}')">+ บันทึกชำระ</button>` : '<span style="color:var(--green);font-size:12px">✓ ชำระครบแล้ว</span>'}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty">ไม่มีข้อมูล</div>';
+}
+
+function openPaymentModal(id) {
+  currentPaymentQuoteId = id;
+  const q = quotesData.find(x => x.id === id);
+  document.getElementById('pay-title').textContent = `ชำระเงิน — ${q?.Title||''}`;
+  document.getElementById('pay-amount').value = '';
+  document.getElementById('pay-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('pay-ref').value = '';
+  document.getElementById('pay-note').value = '';
+  clearSlip();
+  openModal('payment-modal');
+}
+
+// ============================================================
+// SLIP UPLOAD
+// ============================================================
+let slipFile = null;
+
+function handleSlipSelect(input) {
+  if (input.files && input.files[0]) {
+    setSlipFile(input.files[0]);
+  }
+}
+
+function handleSlipDrop(event) {
+  event.preventDefault();
+  document.getElementById('slip-drop-zone').style.borderColor = 'var(--border2)';
+  const file = event.dataTransfer.files[0];
+  if (file) setSlipFile(file);
+}
+
+function setSlipFile(file) {
+  if (file.size > 5 * 1024 * 1024) { toast('ไฟล์ใหญ่เกิน 5MB', 'error'); return; }
+  slipFile = file;
+  const label = document.getElementById('slip-label');
+  const preview = document.getElementById('slip-preview');
+  const dropZone = document.getElementById('slip-drop-zone');
+  if (label) label.textContent = '✓ ' + file.name;
+  if (dropZone) dropZone.style.borderColor = 'var(--green)';
+  // Show preview for images
+  if (file.type.startsWith('image/') && preview) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.style.display = 'block';
+      preview.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border)">
+        <button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="clearSlip()">ลบสลิป</button>`;
+    };
+    reader.readAsDataURL(file);
+  } else if (preview) {
+    preview.style.display = 'block';
+    preview.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      ${file.name}
+      <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="clearSlip()">ลบ</button>
+    </div>`;
+  }
+}
+
+function clearSlip() {
+  slipFile = null;
+  document.getElementById('slip-file').value = '';
+  const label = document.getElementById('slip-label');
+  const preview = document.getElementById('slip-preview');
+  const dropZone = document.getElementById('slip-drop-zone');
+  if (label) label.textContent = 'คลิกหรือลากไฟล์มาวางที่นี่';
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+  if (dropZone) dropZone.style.borderColor = 'var(--border2)';
+}
+
+async function uploadSlipToSharePoint(file, paymentRef) {
+  // Upload to SharePoint Documents/Slips folder
+  const fileName = `SLIP_${paymentRef}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+  const uploadUrl = `https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/drives`;
+  
+  // Get default drive
+  const drivesRes = await graphGet(uploadUrl);
+  const drive = drivesRes.value?.[0];
+  if (!drive) throw new Error('ไม่พบ Document Library');
+
+  // Create Slips folder if needed & upload
+  const uploadRes = await fetch(
+    `https://graph.microsoft.com/v1.0/drives/${drive.id}/root:/Slips/${fileName}:/content`,
+    {
+      method: 'PUT',
+      headers: { 
+        Authorization: 'Bearer ' + accessToken,
+        'Content-Type': file.type || 'application/octet-stream'
+      },
+      body: file
+    }
+  );
+  if (!uploadRes.ok) throw new Error('Upload ไม่สำเร็จ: ' + uploadRes.status);
+  const uploaded = await uploadRes.json();
+  return uploaded.webUrl || '';
+}
+
+async function savePayment() {
+  const amt = +document.getElementById('pay-amount').value;
+  if (!amt || amt <= 0) { toast('กรุณาระบุจำนวนเงิน', 'error'); return; }
+  const q = quotesData.find(x => x.id === currentPaymentQuoteId);
+  if (!q) return;
+  try {
+    toast('กำลังบันทึก...', 'info');
+    const payRef = 'PAY-' + Date.now();
+    const newPaid = Math.min((q.PaidAmount||0) + amt, q.TotalAmount||0);
+
+    // Upload slip if attached
+    let slipUrl = '';
+    if (slipFile) {
+      try {
+        toast('กำลังอัปโหลดสลิป...', 'info');
+        slipUrl = await uploadSlipToSharePoint(slipFile, payRef);
+      } catch(e2) {
+        toast('อัปโหลดสลิปไม่สำเร็จ: ' + e2.message, 'error');
+      }
+    }
+
+    await createListItem(CONFIG.lists.payments, {
+      Title: payRef,
+      QuoteID: +currentPaymentQuoteId,
+      AmountPaid: amt,
+      PaymentDate: document.getElementById('pay-date').value,
+      PaymentMethod: document.getElementById('pay-method').value,
+      Reference: document.getElementById('pay-ref').value,
+      Note: document.getElementById('pay-note').value,
+      SlipURL: slipUrl
+    });
+    // RecordedBy is Person column - skip to avoid errors
+    await updateListItem(CONFIG.lists.quotations, currentPaymentQuoteId, { PaidAmount: newPaid });
+    clearSlip();
+    closeModal('payment-modal');
+    toast(`บันทึกการชำระสำเร็จ${slipUrl?' (พร้อมสลิป)':''}`, 'success');
+    await syncAll();
+  } catch(e) { toast('ไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// CATALOG
+// ============================================================
+function renderCatalog() {
+  const q = (document.getElementById('cat-search')?.value || '').toLowerCase();
+  const cat = document.getElementById('cat-filter')?.value || '';
+  const filtered = catalogData.filter(p =>
+    (p.Title||'').toLowerCase().includes(q) || (p.SKU||'').toLowerCase().includes(q)
+  ).filter(p => !cat || p.Category === cat);
+
+  document.getElementById('cat-grid').innerHTML = filtered.length ? filtered.map(p => `
+    <div class="cat-card">
+      <div class="name">${escHtml(p.Title||'')}</div>
+      <div class="sku">${p.SKU||''}</div>
+      <div class="price">${fmt(p.Price||0)} <span style="font-size:11px;color:var(--muted);font-weight:400">/${p.Unit||''}</span></div>
+      <div style="display:flex;align-items:center;margin-top:8px;gap:6px">
+        <span class="cat-tag">${p.Category||''}</span>
+        <div style="margin-left:auto;display:flex;gap:4px">
+          <button class="action-btn" onclick="editProduct('${p.id}')" title="แก้ไข">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="action-btn" onclick="deleteProduct('${p.id}')" title="ลบ" style="color:var(--red)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`).join('') : '<div class="empty" style="grid-column:1/-1">ไม่พบสินค้า</div>';
+}
+
+function renderModalCatalog() {
+  const q = (document.getElementById('cat-modal-search')?.value || '').toLowerCase();
+  const filtered = catalogData.filter(p => (p.Title||'').toLowerCase().includes(q) || (p.SKU||'').toLowerCase().includes(q));
+  document.getElementById('cat-modal-grid').innerHTML = filtered.map(p => `
+    <div class="cat-card" onclick="addFromCatalog('${p.id}')">
+      <div class="name">${escHtml(p.Title||'')}</div>
+      <div class="sku">${p.SKU||''}</div>
+      <div class="price">${fmt(p.Price||0)} <span style="font-size:11px;color:var(--muted)">/${p.Unit||''}</span></div>
+      <span class="cat-tag">${p.Category||''}</span>
+    </div>`).join('') || '<div style="text-align:center;color:var(--muted);padding:20px;grid-column:1/-1">ไม่พบสินค้า</div>';
+}
+
+function openCatalogPicker() { renderModalCatalog(); openModal('catalog-modal'); }
+
+function addFromCatalog(id) {
+  const p = catalogData.find(c => c.id === id);
+  if (p) { addItem(p); closeModal('catalog-modal'); }
+}
+
+function openAddProduct() {
+  editingProductId = null;
+  document.getElementById('pm-title').textContent = 'เพิ่มสินค้าใหม่';
+  ['np-name','np-sku','np-price','np-unit','np-desc'].forEach(id => document.getElementById(id).value = '');
+  openModal('product-modal');
+}
+
+function editProduct(id) {
+  const p = catalogData.find(c => c.id === id);
+  if (!p) return;
+  editingProductId = id;
+  document.getElementById('pm-title').textContent = 'แก้ไขสินค้า';
+  document.getElementById('np-name').value = p.Title || '';
+  document.getElementById('np-sku').value = p.SKU || '';
+  document.getElementById('np-price').value = p.Price || '';
+  document.getElementById('np-unit').value = p.Unit || '';
+  document.getElementById('np-cat').value = p.Category || 'Hardware';
+  document.getElementById('np-desc').value = p.Description || '';
+  openModal('product-modal');
+}
+
+async function saveProduct() {
+  const name = document.getElementById('np-name').value;
+  const price = +document.getElementById('np-price').value;
+  if (!name || !price) { toast('กรุณากรอกชื่อสินค้าและราคา', 'error'); return; }
+  const fields = {
+    Title: name, SKU: document.getElementById('np-sku').value,
+    Price: price, Unit: document.getElementById('np-unit').value,
+    Category: document.getElementById('np-cat').value,
+    Description: document.getElementById('np-desc').value
+  };
+  try {
+    toast('กำลังบันทึก...', 'info');
+    if (editingProductId) {
+      await updateListItem(CONFIG.lists.catalog, editingProductId, fields);
+    } else {
+      await createListItem(CONFIG.lists.catalog, fields);
+    }
+    closeModal('product-modal');
+    toast('บันทึกสินค้าสำเร็จ', 'success');
+    catalogData = await getListItems(CONFIG.lists.catalog);
+    renderCatalog();
+  } catch(e) { toast('ไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('ลบสินค้านี้?')) return;
+  try {
+    await deleteListItem(CONFIG.lists.catalog, id);
+    catalogData = catalogData.filter(c => c.id !== id);
+    renderCatalog();
+    toast('ลบสินค้าแล้ว', 'success');
+  } catch(e) { toast('ลบไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+// ============================================================
+// PDF
+// ============================================================
+// ============================================================
+// APPROVAL TIERS
+// ============================================================
+const DEFAULT_TIERS = [
+  {id:1, name:'Manager', minAmt:0, maxAmt:99999, approverName:'Manager', approverEmail:'manager@itservices.co.th'},
+  {id:2, name:'Director', minAmt:100000, maxAmt:499999, approverName:'Director', approverEmail:'director@itservices.co.th'},
+  {id:3, name:'MD', minAmt:500000, maxAmt:999999999, approverName:'Managing Director', approverEmail:'md@itservices.co.th'}
+];
+let approvalTiers = [...DEFAULT_TIERS];
+let settingsItemId = null;
+
+async function loadApprovalTiers() {
+  try {
+    const items = await getListItems(CONFIG.lists.settings);
+    const item = items.find(i => i.Title === 'ApprovalTiers');
+    if (item && item.Value) { approvalTiers = JSON.parse(item.Value); settingsItemId = item.id; }
+  } catch(e) { approvalTiers = [...DEFAULT_TIERS]; }
+}
+
+async function saveApprovalTiersToSharePoint() {
+  try {
+    const value = JSON.stringify(approvalTiers);
+    if (settingsItemId) { await updateListItem(CONFIG.lists.settings, settingsItemId, { Value: value }); }
+    else { const c = await createListItem(CONFIG.lists.settings, { Title: 'ApprovalTiers', Value: value }); settingsItemId = c.id; }
+    toast('บันทึก Settings สำเร็จ', 'success');
+  } catch(e) { toast('บันทึกไม่สำเร็จ: ' + e.message, 'error'); }
+}
+
+async function saveApprovalTiers() { await saveApprovalTiersToSharePoint(); updateApproverBox(); }
+
+function getApproverForAmount(amount) {
+  const tier = approvalTiers.filter(t => amount >= t.minAmt && amount <= t.maxAmt).sort((a,b) => b.minAmt - a.minAmt)[0];
+  return tier || approvalTiers[0];
+}
+
+function renderTiers() {
+  const tbody = document.getElementById('tiers-body');
+  if (!tbody) return;
+  tbody.innerHTML = approvalTiers.map((t,i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:12px;text-align:center">${i+1}</td>
+      <td><input value="${t.name}" oninput="updateTier(${t.id},'name',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);width:100%;font-family:var(--font)"></td>
+      <td><input type="number" value="${t.minAmt}" oninput="updateTier(${t.id},'minAmt',+this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);width:100%;font-family:var(--font);text-align:right"></td>
+      <td><input type="number" value="${t.maxAmt===999999999?'':t.maxAmt}" placeholder="ไม่จำกัด" oninput="updateTier(${t.id},'maxAmt',this.value?+this.value:999999999)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);width:100%;font-family:var(--font);text-align:right"></td>
+      <td><input value="${t.approverName}" oninput="updateTier(${t.id},'approverName',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);width:100%;font-family:var(--font)"></td>
+      <td><input value="${t.approverEmail}" oninput="updateTier(${t.id},'approverEmail',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--text);width:100%;font-family:var(--font)"></td>
+      <td><button class="action-btn" onclick="removeTier(${t.id})" style="color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button></td>
+    </tr>`).join('');
+}
+
+function updateTier(id, field, val) { const t = approvalTiers.find(x => x.id === id); if (t) t[field] = val; }
+function addApprovalTier() { const maxId = Math.max(...approvalTiers.map(t => t.id), 0); approvalTiers.push({id:maxId+1,name:'ระดับใหม่',minAmt:0,maxAmt:999999999,approverName:'',approverEmail:''}); renderTiers(); }
+function removeTier(id) { if (approvalTiers.length<=1){toast('ต้องมีอย่างน้อย 1 ระดับ','error');return;} approvalTiers=approvalTiers.filter(t=>t.id!==id); renderTiers(); }
+
+function updateApproverBox() {
+  const box = document.getElementById('approver-box');
+  if (!box) return;
+  const t = calcTotals();
+  const approver = getApproverForAmount(t.grand);
+  box.innerHTML = `<div style="display:flex;align-items:center;gap:10px">
+    <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0">${(approver.approverName||'?')[0]}</div>
+    <div><div style="font-size:12px;font-weight:500;color:var(--text)">${approver.approverName||'(ยังไม่ได้ตั้งค่า)'}</div>
+    <div style="font-size:11px;color:var(--muted)">${approver.approverEmail||''} · ${approver.name}</div></div>
+    <div style="margin-left:auto;font-size:11px;color:var(--muted)">วงเงิน ${fmt(approver.minAmt)}${approver.maxAmt===999999999?'+':' – '+fmt(approver.maxAmt)}</div>
+  </div>`;
+}
+
+// ============================================================
+// CUSTOMERS
+// ============================================================
+let customersData = [];
+let editingCustomerId = null;
+
+async function loadCustomers() {
+  try { customersData = await getListItems(CONFIG.lists.customers); } catch(e) { customersData = []; }
+}
+
+function renderCustomers() {
+  const q = (document.getElementById('cust-search')?.value||'').toLowerCase();
+  const filtered = customersData.filter(c=>(c.Title||'').toLowerCase().includes(q)||(c.ContactPerson||'').toLowerCase().includes(q)||(c.Email||'').toLowerCase().includes(q));
+  document.getElementById('customers-body').innerHTML = filtered.length ? filtered.map(c=>`
+    <tr>
+      <td style="font-weight:500">${escHtml(c.Title||'')}</td>
+      <td>${escHtml(c.ContactPerson||'')}</td>
+      <td>${escHtml(c.Phone||'')}</td>
+      <td>${escHtml(c.Email||'')}</td>
+      <td style="font-family:var(--mono);font-size:11px">${escHtml(c.TaxID||'')}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(c.Address||'')}</td>
+      <td style="display:flex;gap:4px">
+        <button class="action-btn" onclick="pickCustomer('${c.id}')" style="color:var(--accent2)" title="ใช้ในใบเสนอราคา"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        <button class="action-btn" onclick="editCustomer('${c.id}')" title="แก้ไข"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="action-btn" onclick="deleteCustomer('${c.id}')" style="color:var(--red)" title="ลบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan=7 style="text-align:center;padding:32px;color:var(--muted)">ยังไม่มีข้อมูลลูกค้า</td></tr>';
+}
+
+function openAddCustomer() {
+  editingCustomerId = null;
+  document.getElementById('cm-title').textContent = 'เพิ่มลูกค้าใหม่';
+  ['cu-name','cu-contact','cu-taxid','cu-phone','cu-email','cu-address'].forEach(id=>document.getElementById(id).value='');
+  openModal('customer-modal');
+}
+
+function editCustomer(id) {
+  const c = customersData.find(x=>x.id===id);
+  if (!c) return;
+  editingCustomerId = id;
+  document.getElementById('cm-title').textContent = 'แก้ไขข้อมูลลูกค้า';
+  document.getElementById('cu-name').value = c.Title||'';
+  document.getElementById('cu-contact').value = c.ContactPerson||'';
+  document.getElementById('cu-taxid').value = c.TaxID||'';
+  document.getElementById('cu-phone').value = c.Phone||'';
+  document.getElementById('cu-email').value = c.Email||'';
+  document.getElementById('cu-address').value = c.Address||'';
+  openModal('customer-modal');
+}
+
+async function saveCustomer() {
+  const name = document.getElementById('cu-name').value;
+  if (!name) { toast('กรุณาระบุชื่อลูกค้า','error'); return; }
+  const fields = { Title:name, ContactPerson:document.getElementById('cu-contact').value, TaxID:document.getElementById('cu-taxid').value, Phone:document.getElementById('cu-phone').value, Email:document.getElementById('cu-email').value, Address:document.getElementById('cu-address').value };
+  try {
+    toast('กำลังบันทึก...','info');
+    if (editingCustomerId) { await updateListItem(CONFIG.lists.customers, editingCustomerId, fields); }
+    else { await createListItem(CONFIG.lists.customers, fields); }
+    closeModal('customer-modal');
+    await loadCustomers(); renderCustomers();
+    toast('บันทึกข้อมูลลูกค้าสำเร็จ','success');
+  } catch(e) { toast('ไม่สำเร็จ: '+e.message,'error'); }
+}
+
+async function deleteCustomer(id) {
+  if (!confirm('ลบลูกค้านี้?')) return;
+  try { await deleteListItem(CONFIG.lists.customers, id); customersData=customersData.filter(c=>c.id!==id); renderCustomers(); toast('ลบลูกค้าแล้ว','success'); }
+  catch(e) { toast('ลบไม่สำเร็จ: '+e.message,'error'); }
+}
+
+function openCustomerPicker() { renderCustomerPicker(); openModal('customer-picker-modal'); }
+
+function renderCustomerPicker() {
+  const q = (document.getElementById('cust-picker-search')?.value||'').toLowerCase();
+  const filtered = customersData.filter(c=>(c.Title||'').toLowerCase().includes(q)||(c.ContactPerson||'').toLowerCase().includes(q));
+  const list = document.getElementById('customer-picker-list');
+  if (!list) return;
+  list.innerHTML = filtered.length ? filtered.map(c=>`
+    <div onclick="pickCustomer('${c.id}')" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border);margin-bottom:8px;transition:all 0.15s" onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--accent)'" onmouseout="this.style.background='';this.style.borderColor='var(--border)'">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0">${escHtml((c.Title||'?')[0].toUpperCase())}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${escHtml(c.Title||'')}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${[c.ContactPerson,c.Phone,c.Email].filter(Boolean).join(' · ')}</div>
+        ${c.TaxID?`<div style="font-size:10px;color:var(--muted);font-family:var(--mono)">เลขภาษี: ${escHtml(c.TaxID)}</div>`:''}
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>`).join('')
+  : '<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">ไม่พบลูกค้า</div>';
+}
+
+function pickCustomer(id) {
+  const c = customersData.find(x=>x.id===id);
+  if (!c) return;
+  if (document.getElementById('q-client')) {
+    document.getElementById('q-client').value = c.Title||'';
+    document.getElementById('q-contact').value = c.ContactPerson||'';
+    document.getElementById('q-phone').value = c.Phone||'';
+    document.getElementById('q-email').value = c.Email||'';
+    document.getElementById('q-cust-address').value = c.Address||'';
+    document.getElementById('q-cust-taxid').value = c.TaxID||'';
+    document.getElementById('q-cust-tel').value = c.Phone||'';
+  }
+  const box = document.getElementById('client-suggest');
+  if (box) box.style.display='none';
+  closeModal('customer-picker-modal');
+  toast(`เลือก ${c.Title} แล้ว`,'success');
+}
+
+function showClientSuggest(val) {
+  const box = document.getElementById('client-suggest');
+  if (!box) return;
+  if (!val||val.length<1){box.style.display='none';return;}
+  const q = val.toLowerCase();
+  const matches = customersData.filter(c=>(c.Title||'').toLowerCase().includes(q)).slice(0,6);
+  if (!matches.length){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML = matches.map(c=>`
+    <div onclick="pickCustomer('${c.id}')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);transition:background 0.1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <div style="font-weight:500">${escHtml(c.Title||'')}</div>
+      <div style="font-size:11px;color:var(--muted)">${escHtml(c.ContactPerson||'')} ${c.Phone?'· '+c.Phone:''}</div>
+    </div>`).join('');
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#client-suggest') && e.target.id!=='q-client') {
+    const box = document.getElementById('client-suggest');
+    if (box) box.style.display='none';
+  }
+});
+
+// ============================================================
+// COMPANY SETTINGS
+// ============================================================
+let companySettings = { CompanyName:'', TaxID:'', Phone:'', Email:'', Address:'', PrimaryColor:'#1a3a5c', FooterText:'', LogoURL:'', SignatureURL:'' };
+let companySettingsId = null;
+let pendingLogoFile = null;
+let pendingSignatureFile = null;
+
+async function loadCompanySettings() {
+  try {
+    const items = await getListItems(CONFIG.lists.company);
+    const item = items.find(i=>i.Title==='main');
+    if (item) { companySettings={...companySettings,...item}; companySettingsId=item.id; }
+  } catch(e) { console.warn('Could not load company settings:', e.message); }
+}
+
+function renderCompanySettingsForm() {
+  const s = companySettings;
+  if(document.getElementById('co-name')) {
+    document.getElementById('co-name').value = s.CompanyName||'';
+    document.getElementById('co-taxid').value = s.TaxID||'';
+    document.getElementById('co-phone').value = s.Phone||'';
+    document.getElementById('co-email').value = s.Email||'';
+    document.getElementById('co-address').value = s.Address||'';
+    document.getElementById('co-footer').value = s.FooterText||'';
+    document.getElementById('co-color').value = s.PrimaryColor||'#1a3a5c';
+    document.getElementById('co-color-label').textContent = s.PrimaryColor||'#1a3a5c';
+    selectColor(s.PrimaryColor||'#1a3a5c');
+    if (s.LogoURL) document.getElementById('logo-preview').innerHTML=`<img src="${s.LogoURL}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    if (s.SignatureURL) document.getElementById('sig-preview').innerHTML=`<img src="${s.SignatureURL}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+  }
+}
+
+function selectColor(color) {
+  companySettings.PrimaryColor = color;
+  if(document.getElementById('co-color')) {
+    document.getElementById('co-color').value = color;
+    document.getElementById('co-color-label').textContent = color;
+  }
+  document.querySelectorAll('#color-swatches [data-color]').forEach(el=>{
+    el.style.border = el.dataset.color===color?'2px solid var(--text)':'2px solid transparent';
+  });
+}
+
+function previewCompanyImage(inputId, previewId, type) {
+  const file = document.getElementById(inputId).files[0];
+  if (!file) return;
+  if (type==='logo') pendingLogoFile=file; else pendingSignatureFile=file;
+  const reader = new FileReader();
+  reader.onload = e => { document.getElementById(previewId).innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:100%;object-fit:contain">`; };
+  reader.readAsDataURL(file);
+}
+
+async function uploadCompanyImage(file, name) {
+  const drivesRes = await graphGet(`https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/drives`);
+  const drive = drivesRes.value?.[0];
+  if (!drive) throw new Error('ไม่พบ Document Library');
+  const res = await fetch(`https://graph.microsoft.com/v1.0/drives/${drive.id}/root:/CompanyAssets/${name}:/content`,
+    {method:'PUT', headers:{Authorization:'Bearer '+accessToken,'Content-Type':file.type}, body:file});
+  if (!res.ok) throw new Error('Upload ไม่สำเร็จ');
+  const data = await res.json();
+  return data.webUrl||'';
+}
+
+async function saveCompanySettings() {
+  toast('กำลังบันทึก...','info');
+  try {
+    if (pendingLogoFile) { companySettings.LogoURL=await uploadCompanyImage(pendingLogoFile,'logo.'+pendingLogoFile.name.split('.').pop()); pendingLogoFile=null; }
+    if (pendingSignatureFile) { companySettings.SignatureURL=await uploadCompanyImage(pendingSignatureFile,'signature.'+pendingSignatureFile.name.split('.').pop()); pendingSignatureFile=null; }
+    const fields = { Title:'main', CompanyName:document.getElementById('co-name').value, TaxID:document.getElementById('co-taxid').value, Phone:document.getElementById('co-phone').value, Email:document.getElementById('co-email').value, Address:document.getElementById('co-address').value, PrimaryColor:companySettings.PrimaryColor, FooterText:document.getElementById('co-footer').value, LogoURL:companySettings.LogoURL||'', SignatureURL:companySettings.SignatureURL||'' };
+    if (companySettingsId) { await updateListItem(CONFIG.lists.company, companySettingsId, fields); }
+    else { const c=await createListItem(CONFIG.lists.company, fields); companySettingsId=c.id; }
+    companySettings={...companySettings,...fields};
+    toast('บันทึกตั้งค่าบริษัทสำเร็จ','success');
+  } catch(e) { toast('ไม่สำเร็จ: '+e.message,'error'); }
+}
+
+// ============================================================
+// SLIP UPLOAD
+// ============================================================
+let slipFile = null;
+
+function handleSlipSelect(input) { if (input.files&&input.files[0]) setSlipFile(input.files[0]); }
+function handleSlipDrop(event) { event.preventDefault(); document.getElementById('slip-drop-zone').style.borderColor='var(--border2)'; const file=event.dataTransfer.files[0]; if(file) setSlipFile(file); }
+
+function setSlipFile(file) {
+  if (file.size>5*1024*1024) { toast('ไฟล์ใหญ่เกิน 5MB','error'); return; }
+  slipFile=file;
+  const label=document.getElementById('slip-label');
+  const preview=document.getElementById('slip-preview');
+  const dropZone=document.getElementById('slip-drop-zone');
+  if(label) label.textContent='✓ '+file.name;
+  if(dropZone) dropZone.style.borderColor='var(--green)';
+  if(file.type.startsWith('image/')&&preview) {
+    const reader=new FileReader();
+    reader.onload=e=>{preview.style.display='block';preview.innerHTML=`<img src="${e.target.result}" style="max-width:100%;max-height:180px;border-radius:8px;border:1px solid var(--border)"><button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="clearSlip()">ลบสลิป</button>`;};
+    reader.readAsDataURL(file);
+  } else if(preview) {
+    preview.style.display='block';
+    preview.innerHTML=`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>${file.name}<button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="clearSlip()">ลบ</button></div>`;
+  }
+}
+
+function clearSlip() {
+  slipFile=null;
+  if(document.getElementById('slip-file')) document.getElementById('slip-file').value='';
+  const label=document.getElementById('slip-label');
+  const preview=document.getElementById('slip-preview');
+  const dropZone=document.getElementById('slip-drop-zone');
+  if(label) label.textContent='คลิกหรือลากไฟล์มาวางที่นี่';
+  if(preview){preview.style.display='none';preview.innerHTML='';}
+  if(dropZone) dropZone.style.borderColor='var(--border2)';
+}
+
+async function uploadSlipToSharePoint(file, paymentRef) {
+  const fileName=`SLIP_${paymentRef}_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
+  const drivesRes=await graphGet(`https://graph.microsoft.com/v1.0/sites/${CONFIG.siteId}/drives`);
+  const drive=drivesRes.value?.[0];
+  if(!drive) throw new Error('ไม่พบ Document Library');
+  const uploadRes=await fetch(`https://graph.microsoft.com/v1.0/drives/${drive.id}/root:/Slips/${fileName}:/content`,
+    {method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':file.type||'application/octet-stream'},body:file});
+  if(!uploadRes.ok) throw new Error('Upload ไม่สำเร็จ: '+uploadRes.status);
+  const uploaded=await uploadRes.json();
+  return uploaded.webUrl||'';
+}
+
+
+function buildPDFData(q, items) {
+  const sub = (items||[]).reduce((a,i)=>a+((i.Quantity||1)*(i.UnitPrice||0)*(1-(i.DiscountPct||0)/100)),0);
+  const disc = (q.DiscountPct||0)/100;
+  const after = sub*(1-disc);
+  const vat = after*0.07;
+  const grand = q.TotalAmount || (after+vat);
+  return {q,items:items||[],sub,discAmt:sub*disc,after,vat,grand};
+}
+
+function renderPDFHTML(d) {
+  const s = companySettings || {};
+  const primaryColor = s.PrimaryColor || '#1a3a5c';
+  const q = d.q;
+  return `<div class="pdf-preview" id="pdf-printable" style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;color:#1a1a2e;background:#fff;padding:32px">
+
+    <!-- HEADER -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid ${primaryColor}">
+      <div style="flex:1">
+        ${s.LogoURL ? `<img src="${s.LogoURL}" style="max-height:60px;max-width:180px;object-fit:contain;margin-bottom:8px;display:block">` : ''}
+        <div style="font-size:16px;font-weight:700;color:${primaryColor}">${s.CompanyName||'บริษัท ไอที เซอร์วิสเซส จำกัด'}</div>
+        <div style="font-size:10px;color:#666;line-height:1.8;margin-top:4px">
+          ${s.Address ? s.Address+'<br>' : ''}
+          ${s.Phone ? 'Tel: '+s.Phone : ''}${s.Phone&&s.Email?' &nbsp;|&nbsp; ':''}${s.Email ? 'Email: '+s.Email : ''}<br>
+          ${s.TaxID ? 'เลขประจำตัวผู้เสียภาษี: '+s.TaxID : ''}
+        </div>
+      </div>
+      <div style="text-align:right;min-width:200px">
+        <div style="background:${primaryColor};color:#fff;padding:8px 16px;border-radius:6px;margin-bottom:10px;display:inline-block">
+          <div style="font-size:10px;opacity:0.8">Quotation No.</div>
+          <div style="font-size:16px;font-weight:700;letter-spacing:0.5px">${q.Title||''}</div>
+        </div>
+        <table style="font-size:11px;width:100%;border-collapse:collapse;text-align:left">
+          <tr><td style="color:#888;padding:2px 6px 2px 0;white-space:nowrap">Quotation Date:</td><td style="font-weight:500">${(q.QuoteDate||'').split('T')[0]}</td></tr>
+          ${q.ContractStartDate ? `<tr><td style="color:#888;padding:2px 6px 2px 0">เริ่มสัญญา:</td><td style="font-weight:500">${(q.ContractStartDate||'').split('T')[0]}</td></tr>` : ''}
+          ${q.ContractEndDate ? `<tr><td style="color:#888;padding:2px 6px 2px 0">สิ้นสุดสัญญา:</td><td style="font-weight:500">${(q.ContractEndDate||'').split('T')[0]}</td></tr>` : ''}
+          <tr><td style="color:#888;padding:2px 6px 2px 0">Sale Name:</td><td style="font-weight:500">${q.SaleName||''}</td></tr>
+          <tr><td style="color:#888;padding:2px 6px 2px 0">Tel No.:</td><td style="font-weight:500">${q.SaleTel||''}</td></tr>
+          <tr><td style="color:#888;padding:2px 6px 2px 0">Email:</td><td style="font-weight:500">${q.SaleEmail||''}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- CUSTOMER INFO -->
+    <div style="background:#f8fafc;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Bill To / เรียน</div>
+        <div style="font-size:14px;font-weight:700;color:${primaryColor};margin-bottom:4px">${q.ClientName||''}</div>
+        ${q.ContactPerson ? `<div style="font-size:11px;color:#555">ผู้ติดต่อ: ${q.ContactPerson}</div>` : ''}
+        ${q.CustomerTel||q.Phone ? `<div style="font-size:11px;color:#555">Tel: ${q.CustomerTel||q.Phone||''}</div>` : ''}
+        ${q.Email ? `<div style="font-size:11px;color:#555">Email: ${q.Email}</div>` : ''}
+      </div>
+      <div>
+        <div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">ที่อยู่</div>
+        <div style="font-size:11px;color:#555;line-height:1.7;white-space:pre-line">${q.CustomerAddress||''}</div>
+        ${q.CustomerTaxID ? `<div style="font-size:11px;color:#555;margin-top:4px">เลขภาษี: <strong>${q.CustomerTaxID}</strong></div>` : ''}
+      </div>
+    </div>
+
+    <!-- ITEMS TABLE -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:11px">
+      <thead>
+        <tr style="background:${primaryColor};color:#fff">
+          <th style="padding:8px 10px;text-align:center;width:32px">#</th>
+          <th style="padding:8px 10px;text-align:left">รายการ / Description</th>
+          <th style="padding:8px 10px;text-align:center;width:60px">จำนวน</th>
+          <th style="padding:8px 10px;text-align:center;width:60px">หน่วย</th>
+          <th style="padding:8px 10px;text-align:right;width:100px">ราคา/หน่วย</th>
+          <th style="padding:8px 10px;text-align:center;width:60px">ส่วนลด</th>
+          <th style="padding:8px 10px;text-align:right;width:100px">จำนวนเงิน</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${d.items.length ? d.items.map((it,i) => `
+          <tr style="background:${i%2===0?'#fff':'#f8fafc'}">
+            <td style="padding:8px 10px;text-align:center;color:#888;border-bottom:0.5px solid #e5e7eb">${i+1}</td>
+            <td style="padding:8px 10px;border-bottom:0.5px solid #e5e7eb">
+              <div style="font-weight:600;color:#1a1a2e">${escHtml(it.Title||it.name||'-')}</div>
+              ${(it.Description||it.desc) ? `<div style="font-size:10px;color:#666;margin-top:3px;white-space:pre-line;line-height:1.6">${escHtml(it.Description||it.desc||'')}</div>` : ''}
+            </td>
+            <td style="padding:8px 10px;text-align:center;border-bottom:0.5px solid #e5e7eb">${it.Quantity||it.qty||1}</td>
+            <td style="padding:8px 10px;text-align:center;border-bottom:0.5px solid #e5e7eb">${it.Unit||it.unit||''}</td>
+            <td style="padding:8px 10px;text-align:right;border-bottom:0.5px solid #e5e7eb;font-family:monospace">${fmt(it.UnitPrice||it.price||0)}</td>
+            <td style="padding:8px 10px;text-align:center;border-bottom:0.5px solid #e5e7eb">${it.DiscountPct||it.disc||0}%</td>
+            <td style="padding:8px 10px;text-align:right;border-bottom:0.5px solid #e5e7eb;font-family:monospace;font-weight:500">${fmt((it.Quantity||it.qty||1)*(it.UnitPrice||it.price||0)*(1-(it.DiscountPct||it.disc||0)/100))}</td>
+          </tr>`).join('')
+        : '<tr><td colspan=7 style="text-align:center;padding:20px;color:#aaa">ไม่มีรายการ</td></tr>'}
+      </tbody>
+    </table>
+
+    <!-- TOTALS -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+      <table style="font-size:12px;min-width:280px;border-collapse:collapse">
+        <tr><td style="padding:4px 16px 4px 0;color:#666">ยอดรวมก่อนส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0">${fmt(d.sub)}</td></tr>
+        ${d.discAmt>0 ? `<tr><td style="padding:4px 16px 4px 0;color:#666">ส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#e74c3c">(${fmt(d.discAmt)})</td></tr>` : ''}
+        <tr><td style="padding:4px 16px 4px 0;color:#666">VAT 7%</td><td style="text-align:right;font-family:monospace;padding:4px 0">${fmt(d.vat)}</td></tr>
+        <tr style="border-top:2px solid ${primaryColor}">
+          <td style="padding:8px 16px 4px 0;font-size:14px;font-weight:700;color:${primaryColor}">ยอดรวมสุทธิ</td>
+          <td style="text-align:right;font-family:monospace;font-size:16px;font-weight:700;color:${primaryColor};padding:8px 0 4px">${fmt(d.grand)}</td>
+        </tr>
+        <tr><td style="padding:2px 16px 0 0;color:#666">วิธีชำระเงิน</td><td style="text-align:right;padding:2px 0;font-weight:500">${q.PaymentMethod||''}</td></tr>
+      </table>
+    </div>
+
+    <!-- FOOTER TERMS -->
+    ${s.FooterText ? `
+    <div style="background:#f8fafc;border-radius:6px;padding:12px 14px;margin-bottom:16px;font-size:10px;color:#666;line-height:1.8;white-space:pre-line;border-left:3px solid ${primaryColor}">
+      ${s.FooterText}
+    </div>` : ''}
+
+    <!-- SIGNATURES - 3 columns -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:24px;text-align:center;font-size:11px">
+      <div>
+        <div style="font-size:10px;color:#888;margin-bottom:40px">Acceptance By Customer</div>
+        <div style="border-top:0.5px solid #ccc;padding-top:8px">
+          <div style="color:#333">ลงชื่อ ................................................</div>
+          <div style="color:#888;font-size:10px;margin-top:4px">Position: .................................</div>
+          <div style="color:#888;font-size:10px">Date: .................................</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#888;margin-bottom:4px">Quoted By</div>
+        ${s.SignatureURL ? `<img src="${s.SignatureURL}" style="max-height:44px;object-fit:contain;display:block;margin:0 auto 4px">` : '<div style="height:44px"></div>'}
+        <div style="border-top:0.5px solid #ccc;padding-top:8px">
+          <div style="color:#333;font-weight:500">${q.SaleName||'................................................'}</div>
+          <div style="color:#888;font-size:10px;margin-top:4px">Strategic Partnership</div>
+          <div style="color:#888;font-size:10px">${(q.QuoteDate||'').split('T')[0]}</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;color:#888;margin-bottom:40px">Approved By</div>
+        <div style="border-top:0.5px solid #ccc;padding-top:8px">
+          <div style="color:#333">ลงชื่อ ................................................</div>
+          <div style="color:#888;font-size:10px;margin-top:4px">Team Senior Strategic Partnership</div>
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+const fmt = n => '฿' + Number(n||0).toLocaleString('th-TH', {minimumFractionDigits:2,maximumFractionDigits:2});
+const escHtml = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function statusBadge(s) {
+  const m = {Draft:'badge-draft',Pending:'badge-pending',Approved:'badge-approved',Rejected:'badge-rejected',Sent:'badge-sent'};
+  const l = {Draft:'Draft',Pending:'รออนุมัติ',Approved:'อนุมัติแล้ว',Rejected:'ปฏิเสธ',Sent:'ส่งแล้ว'};
+  return `<span class="badge ${m[s]||'badge-draft'}">${l[s]||s}</span>`;
+}
+
+function payBadge(q) {
+  const paid = q.PaidAmount||0, total = q.TotalAmount||0;
+  if (paid >= total && total > 0) return '<span class="badge badge-paid">ชำระแล้ว</span>';
+  if (paid > 0) return `<span class="badge badge-partial">บางส่วน ${Math.round(paid/total*100)}%</span>`;
+  return '<span class="badge badge-unpaid">ยังไม่ชำระ</span>';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, type='info') {
+  const wrap = document.getElementById('toasts');
+  if (!wrap) return;
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function exportPDF() {
+  const s = companySettings || {};
+  const primaryColor = s.PrimaryColor || '#1a3a5c';
+  const el = document.getElementById('pdf-printable');
+  if (!el) { toast('ไม่พบข้อมูล PDF', 'error'); return; }
+  // Build PDF HTML using string concat to avoid browser HTML parser issues
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Quotation<\/title>'
+    + '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:\'IBM Plex Sans Thai\',sans-serif;padding:20px 30px;color:#1a1a2e;background:#fff;font-size:12px}table{width:100%;border-collapse:collapse}@media print{@page{margin:10mm}body{padding:0}}<\/style><\/head>'
+    + '<body>' + el.innerHTML + '<scr' + 'ipt>setTimeout(()=>{window.print();},800);<\/scr' + 'ipt><\/body><\/html>';
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 2000);
+}
+
+</script>
+</body>
+</html>
