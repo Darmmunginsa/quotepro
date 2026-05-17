@@ -1730,11 +1730,29 @@ function renderCustomers() {
       <td style="font-family:var(--mono);font-size:11px">${escHtml(c.TaxID||'')}</td>
       <td style="font-size:12px;color:var(--muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(c.Address||'')}</td>
       <td style="display:flex;gap:4px">
-        <button class="action-btn" onclick="pickCustomer('${c.id}')" style="color:var(--accent2)" title="ใช้ในใบเสนอราคา"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        <button class="action-btn" onclick="selectCustomerForQuote('${c.id}')" style="color:var(--accent2)" title="ใช้ในใบเสนอราคา"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
         <button class="action-btn" onclick="editCustomer('${c.id}')" title="แก้ไข"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="action-btn" onclick="deleteCustomer('${c.id}')" style="color:var(--red)" title="ลบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
       </td>
     </tr>`).join('') : '<tr><td colspan=7 style="text-align:center;padding:32px;color:var(--muted)">ยังไม่มีข้อมูลลูกค้า</td></tr>';
+}
+
+function selectCustomerForQuote(id) {
+  const c = customersData.find(x => x.id === id);
+  if (!c) return;
+  showPage('newquote', null);
+  setTimeout(() => {
+    if(document.getElementById('q-client')) {
+      document.getElementById('q-client').value = c.Title||'';
+      document.getElementById('q-contact').value = c.ContactPerson||'';
+      document.getElementById('q-phone').value = c.Phone||'';
+      document.getElementById('q-email').value = c.Email||'';
+      document.getElementById('q-cust-address').value = c.Address||'';
+      document.getElementById('q-cust-taxid').value = c.TaxID||'';
+      document.getElementById('q-cust-tel').value = c.Phone||'';
+    }
+    toast('โหลดข้อมูล '+c.Title+' แล้ว', 'success');
+  }, 150);
 }
 
 function openAddCustomer() {
@@ -2019,7 +2037,7 @@ function renderPDFHTML(d) {
 
     <!-- HEADER -->
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid ${primaryColor}">
-      <div style="flex:1">
+      <div style="flex:1;max-width:55%;word-break:break-word">
         ${s.LogoURL ? `<img src="${s.LogoURL}" style="max-height:60px;max-width:180px;object-fit:contain;margin-bottom:8px;display:block">` : ''}
         <div style="font-size:16px;font-weight:700;color:${primaryColor}">${s.CompanyName||'บริษัท ไอที เซอร์วิสเซส จำกัด'}</div>
         <div style="font-size:10px;color:#666;line-height:1.8;margin-top:4px">
@@ -2093,15 +2111,15 @@ function renderPDFHTML(d) {
 
     <!-- TOTALS -->
     <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
-      <table style="font-size:12px;min-width:280px;border-collapse:collapse">
-        <tr><td style="padding:4px 16px 4px 0;color:#555">ยอดรวมก่อนส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0">${fmt(d.sub)}</td></tr>
-        ${d.discAmt>0 ? `<tr><td style="padding:4px 16px 4px 0;color:#666">ส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#e74c3c">(${fmt(d.discAmt)})</td></tr>` : ''}
-        <tr><td style="padding:4px 16px 4px 0;color:#555">VAT 7%</td><td style="text-align:right;font-family:monospace;padding:4px 0">${fmt(d.vat)}</td></tr>
+      <table style="font-size:12px;min-width:280px;border-collapse:collapse;color:#1a1a2e">
+        <tr><td style="padding:4px 16px 4px 0;color:#444">ยอดรวมก่อนส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#1a1a2e">${fmt(d.sub)}</td></tr>
+        ${d.discAmt>0 ? `<tr><td style="padding:4px 16px 4px 0;color:#444">ส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#e74c3c">(${fmt(d.discAmt)})</td></tr>` : ''}
+        <tr><td style="padding:4px 16px 4px 0;color:#444">VAT 7%</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#1a1a2e">${fmt(d.vat)}</td></tr>
         <tr style="border-top:2px solid ${primaryColor}">
           <td style="padding:8px 16px 4px 0;font-size:14px;font-weight:700;color:${primaryColor}">ยอดรวมสุทธิ</td>
           <td style="text-align:right;font-family:monospace;font-size:16px;font-weight:700;color:${primaryColor};padding:8px 0 4px">${fmt(d.grand)}</td>
         </tr>
-        <tr><td style="padding:2px 16px 0 0;color:#555">วิธีชำระเงิน</td><td style="text-align:right;padding:2px 0;font-weight:500">${q.PaymentMethod||''}</td></tr>
+        <tr><td style="padding:2px 16px 0 0;color:#444">วิธีชำระเงิน</td><td style="text-align:right;padding:2px 0;font-weight:500;color:#1a1a2e">${q.PaymentMethod||''}</td></tr>
       </table>
     </div>
 
