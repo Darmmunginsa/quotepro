@@ -1816,6 +1816,67 @@ function renderCustomers() {
     </tr>`).join('') : '<tr><td colspan=7 style="text-align:center;padding:32px;color:var(--muted)">ยังไม่มีข้อมูลลูกค้า</td></tr>';
 }
 
+// ============================================================
+// QUOTE SIGNATURE (per-user)
+// ============================================================
+let currentQuoteSignature = '';
+
+function saveSig(key, val) {
+  try { localStorage.setItem(key, val); } catch(e) {
+    try { sessionStorage.setItem(key, val); } catch(e2) {}
+  }
+}
+function loadSigStored(key) {
+  try { return localStorage.getItem(key) || sessionStorage.getItem(key) || null; } catch(e) { return null; }
+}
+
+function handleQuoteSigUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { toast('ไฟล์ใหญ่เกิน 3MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentQuoteSignature = e.target.result;
+    const key = 'mySignature_' + (currentUser?.userPrincipalName || 'default');
+    saveSig(key, currentQuoteSignature);
+    updateSigPreview(currentQuoteSignature);
+    toast('✓ อัปโหลดลายเซ็นแล้ว', 'success');
+  };
+  reader.onerror = () => toast('อ่านไฟล์ไม่ได้', 'error');
+  reader.readAsDataURL(file);
+}
+
+function loadMySignature() {
+  const key = 'mySignature_' + (currentUser?.userPrincipalName || 'default');
+  const saved = loadSigStored(key);
+  if (saved) {
+    currentQuoteSignature = saved;
+    updateSigPreview(saved);
+    toast('โหลดลายเซ็นเดิมแล้ว', 'success');
+  } else {
+    toast('ยังไม่มีลายเซ็นที่บันทึกไว้ — กรุณาอัปโหลดก่อน', 'error');
+  }
+}
+
+function updateSigPreview(src) {
+  const preview = document.getElementById('q-sig-preview');
+  if (!preview) return;
+  if (src) {
+    preview.innerHTML = `<img src="${src}" style="max-width:100%;max-height:100%;object-fit:contain;padding:4px">`;
+    preview.style.border = '1.5px solid var(--green)';
+  } else {
+    preview.innerHTML = '<span style="font-size:11px;color:var(--muted);text-align:center;padding:4px">คลิกเพื่ออัปโหลด<br>ลายเซ็น</span>';
+    preview.style.border = '1.5px dashed var(--border2)';
+  }
+}
+
+function initQuoteSignature() {
+  const key = 'mySignature_' + (currentUser?.userPrincipalName || 'default');
+  const saved = loadSigStored(key);
+  if (saved) { currentQuoteSignature = saved; updateSigPreview(saved); }
+  else { currentQuoteSignature = ''; updateSigPreview(''); }
+}
+
 function selectCustomerForQuote(id) {
   const c = customersData.find(x => x.id === id);
   if (!c) return;
@@ -2161,7 +2222,7 @@ async function showPDFForQuote(id) {
   // Try to load signature for the sale person
   try {
     const saleEmail = q.SaleEmail || currentUser?.userPrincipalName || '';
-    d.signatureBase64 = localStorage.getItem('mySignature_' + saleEmail) || currentQuoteSignature || companySettings.SignatureBase64 || companySettings.SignatureURL || '';
+    d.signatureBase64 = loadSigStored('mySignature_' + saleEmail) || loadSigStored('mySignature_default') || currentQuoteSignature || companySettings.SignatureBase64 || companySettings.SignatureURL || '';
   } catch(e2) { d.signatureBase64 = currentQuoteSignature || ''; }
   document.getElementById('pdf-content').innerHTML = renderPDFHTML(d);
   openModal('pdf-modal');
