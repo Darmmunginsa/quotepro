@@ -820,6 +820,46 @@ const CONFIG = {
 let accessToken = null;
 let currentUser = null;
 let userRoles = { isAdmin: false, isApprover: false, isSales: true }; // default to sales
+
+async function loadUserRoles() {
+  if (!currentUser || !accessToken) return;
+  try {
+    const siteBase = 'https://rpaexpert.sharepoint.com/sites/SalesQuotation/_api/web/sitegroups';
+    const loginName = encodeURIComponent('i:0#.f|membership|' + currentUser.userPrincipalName);
+    const checkGroup = async (groupId) => {
+      try {
+        const r = await fetch(
+          `${siteBase}/GetById(${groupId})/users?$filter=LoginName eq '${loginName}'`,
+          { headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json;odata=verbose' } }
+        );
+        const data = await r.json();
+        return (data?.d?.results?.length || 0) > 0;
+      } catch(e) { return false; }
+    };
+    const [isAdmin, isApprover, isSales] = await Promise.all([
+      checkGroup(CONFIG.groups.admin),
+      checkGroup(CONFIG.groups.approver),
+      checkGroup(CONFIG.groups.sales)
+    ]);
+    userRoles = {
+      isAdmin:    isAdmin,
+      isApprover: isApprover || isAdmin,
+      isSales:    isSales || (!isAdmin && !isApprover)
+    };
+    console.log('User roles:', userRoles);
+  } catch(e) {
+    console.warn('Role load failed, using email fallback:', e.message);
+    const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
+    const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
+    const isApproverByEmail = tierEmails.includes(myEmail);
+    userRoles = { isAdmin: false, isApprover: isApproverByEmail, isSales: !isApproverByEmail };
+  }
+}
+
+function isAdminUser() { return userRoles.isAdmin; }
+function isApproverUser() { return userRoles.isApprover || userRoles.isAdmin; }
+function isSalesUser() { return userRoles.isSales; }
+
 let currentApproveId = null;
 let currentPaymentQuoteId = null;
 let quoteItems = [];
@@ -944,24 +984,7 @@ async function deleteListItem(listId, itemId) {
 // ============================================================
 // SYNC
 // ============================================================
-function isAdminUser() {
-  if (!currentUser) return false;
-  const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
-  const adminEmails = CONFIG.adminEmails.map(e => e.toLowerCase());
-  const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
-  // Approvers are also admins
-  return adminEmails.includes(myEmail) || tierEmails.includes(myEmail);
-}
 
-function isApproverUser() {
-  if (!currentUser) return false;
-  const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
-  // Check if user is in any approval tier
-  const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
-  // Also check CONFIG.approverEmails
-  const configEmails = CONFIG.approverEmails.map(e => e.toLowerCase());
-  return tierEmails.includes(myEmail) || configEmails.includes(myEmail);
-}
 
 function filterQuotesForUser(allQuotes) {
   if (!currentUser) return [];
