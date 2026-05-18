@@ -804,10 +804,13 @@ const CONFIG = {
     company:    'f871327e-833a-475d-aa9f-65a899c0e0a0'
   },
   scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read'],
-  // Approvers can see all quotes - auto-sync from Approval Tiers settings
+  // SharePoint Group IDs for role-based access
+  groups: {
+    admin:    22,  // SQ-Admin
+    approver: 23,  // SQ-Approver
+    sales:    24   // SQ-Sales
+  },
   approverEmails: [],
-  // Admins can edit Company Settings (logo, address, color, footer)
-  // Add admin emails here - approvers are also admins by default
   adminEmails: []
 };
 
@@ -816,6 +819,7 @@ const CONFIG = {
 // ============================================================
 let accessToken = null;
 let currentUser = null;
+let userRoles = { isAdmin: false, isApprover: false, isSales: true }; // default to sales
 let currentApproveId = null;
 let currentPaymentQuoteId = null;
 let quoteItems = [];
@@ -862,10 +866,14 @@ async function afterLogin() {
     document.getElementById('app-screen').style.display = 'flex';
     initNewQuote();
     await syncAll();
+    // Load SharePoint group membership
+    await loadUserRoles();
     // Show role badge after sync (tiers loaded)
     const roleBadge = document.getElementById('user-role-badge');
     if (roleBadge) {
-      if (isApproverUser()) {
+      if (userRoles.isAdmin) {
+        roleBadge.innerHTML = '<span style="background:rgba(248,113,113,0.2);color:var(--red);padding:1px 6px;border-radius:10px;font-size:9px">Admin</span>';
+      } else if (userRoles.isApprover) {
         roleBadge.innerHTML = '<span style="background:rgba(251,191,36,0.2);color:var(--amber);padding:1px 6px;border-radius:10px;font-size:9px">Approver</span>';
       } else {
         roleBadge.innerHTML = '<span style="background:rgba(79,142,247,0.15);color:var(--accent2);padding:1px 6px;border-radius:10px;font-size:9px">Sales</span>';
@@ -957,16 +965,14 @@ function isApproverUser() {
 
 function filterQuotesForUser(allQuotes) {
   if (!currentUser) return [];
-  if (isApproverUser()) return allQuotes; // Approver sees all
+  // Admin and Approver see all quotes
+  if (userRoles.isAdmin || userRoles.isApprover) return allQuotes;
+  // Sales see only their own quotes
   const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
-  const myName = (currentUser.displayName||'').toLowerCase();
   return allQuotes.filter(q => {
     const saleEmail = (q.SaleEmail||'').toLowerCase();
-    const saleName = (q.SaleName||'').toLowerCase();
-    // Match by sale email or sale name or created by current user
-    return saleEmail === myEmail || 
-           (saleEmail === '' && saleName === myName) ||
-           (saleEmail === '' && saleName === '');
+    // Match by sale email, or show if no sale email assigned (own quotes)
+    return saleEmail === myEmail || saleEmail === '';
   });
 }
 
@@ -1014,10 +1020,10 @@ function showPage(id, el) {
   if (id === 'company') {
     loadCompanySettings().then(() => {
       renderCompanySettingsForm();
-      // Show admin section only for admins
+      // Show admin section only for SQ-Admin
       const adminSection = document.getElementById('admin-settings-section');
       if (adminSection) {
-        adminSection.style.display = isAdminUser() ? 'block' : 'none';
+        adminSection.style.display = userRoles.isAdmin ? 'block' : 'none';
       }
     });
   }
