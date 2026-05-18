@@ -803,7 +803,7 @@ const CONFIG = {
     customers:  '488c81b6-872e-4e9f-9b33-0f2b0e5cb7d1',
     company:    'f871327e-833a-475d-aa9f-65a899c0e0a0'
   },
-  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read','https://rpaexpert.sharepoint.com/AllSites.Read'],
+  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read'],
   // SharePoint Group IDs for role-based access
   groups: {
     admin:    22,  // SQ-Admin
@@ -825,40 +825,44 @@ async function loadUserRoles() {
   if (!currentUser || !accessToken) return;
   try {
     const email = currentUser.userPrincipalName;
-    const loginName = encodeURIComponent(`i:0#.f|membership|${email}`);
-    const base = 'https://rpaexpert.sharepoint.com/sites/SalesQuotation/_api/web/sitegroups';
 
-    const checkGroup = async (groupId) => {
-      try {
-        const r = await fetch(
-          `${base}/GetById(${groupId})/users?$filter=LoginName eq '${loginName}'&$select=LoginName`,
-          { headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json;odata=verbose' } }
-        );
-        if (!r.ok) return false;
-        const data = await r.json();
-        return (data?.d?.results?.length || 0) > 0;
-      } catch(e) { return false; }
-    };
+    // Use Graph API: check group members via SharePoint site groups endpoint
+    // GET /sites/{siteId}/lists/{groupListId} is not available
+    // Instead: store roles in a SharePoint list "UserRoles" with Email + Role columns
+    // OR: check via Graph group membership using site's associated groups
 
-    const [isAdmin, isApprover, isSales] = await Promise.all([
-      checkGroup(CONFIG.groups.admin),
-      checkGroup(CONFIG.groups.approver),
-      checkGroup(CONFIG.groups.sales)
-    ]);
+    // Best approach for implicit flow: store user roles in Settings SharePoint list
+    // Load role from Settings list keyed by email
+    const items = await getListItems(CONFIG.lists.settings);
+    const roleItem = items.find(i => 
+      i.Title === 'Role_' + email.toLowerCase() || 
+      i.Title === 'Role_' + email.split('@')[0].toLowerCase()
+    );
 
-    console.log(`Roles — Admin:${isAdmin} Approver:${isApprover} Sales:${isSales}`);
-    userRoles = {
-      isAdmin:    isAdmin,
-      isApprover: isApprover || isAdmin,
-      isSales:    isSales || (!isAdmin && !isApprover)
-    };
-    console.log('Final userRoles:', JSON.stringify(userRoles));
-  } catch(e) {
-    console.warn('Role load failed:', e.message);
-    const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
+    if (roleItem && roleItem.Value) {
+      const role = roleItem.Value.toLowerCase();
+      userRoles = {
+        isAdmin:    role === 'admin',
+        isApprover: role === 'approver' || role === 'admin',
+        isSales:    role === 'sales' || role === ''
+      };
+      console.log('Roles from SharePoint Settings:', JSON.stringify(userRoles));
+      return;
+    }
+
+    // Fallback: check approval tiers by email
+    const myEmail = email.toLowerCase();
     const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
     const isApproverByEmail = tierEmails.includes(myEmail);
-    userRoles = { isAdmin: false, isApprover: isApproverByEmail, isSales: !isApproverByEmail };
+    userRoles = {
+      isAdmin:    false,
+      isApprover: isApproverByEmail,
+      isSales:    !isApproverByEmail
+    };
+    console.log('Roles from tier fallback:', JSON.stringify(userRoles));
+  } catch(e) {
+    console.warn('Role load failed:', e.message);
+    userRoles = { isAdmin: false, isApprover: false, isSales: true };
   }
 }
 
