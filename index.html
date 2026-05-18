@@ -529,72 +529,92 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 
       <!-- COMPANY SETTINGS -->
       <div class="page" id="page-company">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <!-- Left: Logo & Signature -->
-          <div>
-            <div class="card" style="margin-bottom:14px">
-              <div class="card-header"><h3>Logo บริษัท</h3></div>
-              <div style="padding:16px">
-                <div id="logo-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;overflow:hidden" onclick="document.getElementById('logo-file').click()">
-                  <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลด Logo</span>
-                </div>
-                <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewCompanyImage('logo-file','logo-preview','logo')">
-                <button class="btn btn-sm" onclick="document.getElementById('logo-file').click()">เปลี่ยน Logo</button>
-              </div>
+        <!-- Signature section - visible to ALL users -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <h3>ลายเซ็นของฉัน</h3>
+            <span style="font-size:11px;color:var(--muted)">แสดงใน Quoted By ของใบเสนอราคา</span>
+          </div>
+          <div style="padding:16px;display:flex;align-items:center;gap:20px">
+            <div id="sig-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0" onclick="document.getElementById('sig-file').click()">
+              <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลดลายเซ็น</span>
             </div>
-            <div class="card">
-              <div class="card-header"><h3>ลายเซ็นผู้มีอำนาจ</h3></div>
-              <div style="padding:16px">
-                <div id="sig-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;overflow:hidden" onclick="document.getElementById('sig-file').click()">
-                  <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลดลายเซ็น</span>
-                </div>
-                <input type="file" id="sig-file" accept="image/*" style="display:none" onchange="previewCompanyImage('sig-file','sig-preview','signature')">
-                <button class="btn btn-sm" onclick="document.getElementById('sig-file').click()">เปลี่ยนลายเซ็น</button>
-              </div>
+            <div>
+              <input type="file" id="sig-file" accept="image/*" style="display:none" onchange="previewCompanyImage('sig-file','sig-preview','signature')">
+              <button class="btn btn-sm" onclick="document.getElementById('sig-file').click()">เปลี่ยนลายเซ็น</button>
+              <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">อัปโหลดรูปลายเซ็นของคุณ<br>รองรับ JPG, PNG ขนาดสูงสุด 2MB</p>
             </div>
           </div>
-          <!-- Right: Company Info -->
-          <div>
-            <div class="card" style="margin-bottom:14px">
-              <div class="card-header"><h3>ข้อมูลบริษัท</h3></div>
-              <div style="padding:16px">
-                <div class="form-grid">
-                  <div class="form-group" style="grid-column:1/-1"><label>ชื่อบริษัท</label><input id="co-name" placeholder="บริษัท ... จำกัด"></div>
-                  <div class="form-group"><label>เลขประจำตัวผู้เสียภาษี</label><input id="co-taxid" placeholder="0000000000000"></div>
-                  <div class="form-group"><label>เบอร์โทรศัพท์</label><input id="co-phone" placeholder="02-xxx-xxxx"></div>
-                  <div class="form-group" style="grid-column:1/-1"><label>Email</label><input id="co-email" placeholder="info@company.com"></div>
-                  <div class="form-group" style="grid-column:1/-1"><label>ที่อยู่</label><textarea id="co-address" placeholder="ที่อยู่บริษัท..." style="min-height:72px"></textarea></div>
-                </div>
-              </div>
-            </div>
-            <div class="card" style="margin-bottom:14px">
-              <div class="card-header"><h3>สีหลักของใบเสนอราคา</h3></div>
-              <div style="padding:16px">
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="color-swatches">
-                  <div onclick="selectColor('#1a3a5c')" style="width:32px;height:32px;border-radius:50%;background:#1a3a5c;cursor:pointer;border:2px solid transparent" data-color="#1a3a5c"></div>
-                  <div onclick="selectColor('#1a5276')" style="width:32px;height:32px;border-radius:50%;background:#1a5276;cursor:pointer;border:2px solid transparent" data-color="#1a5276"></div>
-                  <div onclick="selectColor('#145a32')" style="width:32px;height:32px;border-radius:50%;background:#145a32;cursor:pointer;border:2px solid transparent" data-color="#145a32"></div>
-                  <div onclick="selectColor('#6e2f8f')" style="width:32px;height:32px;border-radius:50%;background:#6e2f8f;cursor:pointer;border:2px solid transparent" data-color="#6e2f8f"></div>
-                  <div onclick="selectColor('#7b241c')" style="width:32px;height:32px;border-radius:50%;background:#7b241c;cursor:pointer;border:2px solid transparent" data-color="#7b241c"></div>
-                  <div onclick="selectColor('#1a252f')" style="width:32px;height:32px;border-radius:50%;background:#1a252f;cursor:pointer;border:2px solid transparent" data-color="#1a252f"></div>
-                  <input type="color" id="co-color" value="#1a3a5c" oninput="selectColor(this.value)" style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;padding:0">
-                </div>
-                <div style="margin-top:10px;font-size:12px;color:var(--muted)">สีที่เลือก: <span id="co-color-label" style="font-family:var(--mono)">#1a3a5c</span></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header"><h3>Footer / เงื่อนไขมาตรฐาน</h3></div>
-              <div style="padding:16px">
-                <div class="form-group"><label>ข้อความ Footer</label><textarea id="co-footer" placeholder="เงื่อนไขและข้อกำหนดมาตรฐาน..." style="min-height:80px"></textarea></div>
-              </div>
-            </div>
+          <div style="padding:0 16px 14px;display:flex;justify-content:flex-end">
+            <button class="btn btn-primary btn-sm" onclick="saveSignatureOnly()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+              บันทึกลายเซ็น
+            </button>
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:4px;margin-bottom:24px">
-          <button class="btn btn-primary" onclick="saveCompanySettings()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            บันทึกตั้งค่าบริษัท
-          </button>
+
+        <!-- Admin-only section -->
+        <div id="admin-settings-section" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;font-size:12px;color:var(--amber)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Admin Settings — มองเห็นเฉพาะผู้อนุมัติ/Admin เท่านั้น
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div>
+              <div class="card" style="margin-bottom:14px">
+                <div class="card-header"><h3>Logo บริษัท</h3></div>
+                <div style="padding:16px">
+                  <div id="logo-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;overflow:hidden" onclick="document.getElementById('logo-file').click()">
+                    <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลด Logo</span>
+                  </div>
+                  <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="previewCompanyImage('logo-file','logo-preview','logo')">
+                  <button class="btn btn-sm" onclick="document.getElementById('logo-file').click()">เปลี่ยน Logo</button>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="card" style="margin-bottom:14px">
+                <div class="card-header"><h3>ข้อมูลบริษัท</h3></div>
+                <div style="padding:16px">
+                  <div class="form-grid">
+                    <div class="form-group" style="grid-column:1/-1"><label>ชื่อบริษัท</label><input id="co-name" placeholder="บริษัท ... จำกัด"></div>
+                    <div class="form-group"><label>เลขประจำตัวผู้เสียภาษี</label><input id="co-taxid" placeholder="0000000000000"></div>
+                    <div class="form-group"><label>เบอร์โทรศัพท์</label><input id="co-phone" placeholder="02-xxx-xxxx"></div>
+                    <div class="form-group" style="grid-column:1/-1"><label>Email</label><input id="co-email" placeholder="info@company.com"></div>
+                    <div class="form-group" style="grid-column:1/-1"><label>ที่อยู่</label><textarea id="co-address" placeholder="ที่อยู่บริษัท..." style="min-height:72px"></textarea></div>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="margin-bottom:14px">
+                <div class="card-header"><h3>สีหลักของใบเสนอราคา</h3></div>
+                <div style="padding:16px">
+                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="color-swatches">
+                    <div onclick="selectColor('#1a3a5c')" style="width:32px;height:32px;border-radius:50%;background:#1a3a5c;cursor:pointer;border:2px solid transparent" data-color="#1a3a5c"></div>
+                    <div onclick="selectColor('#1a5276')" style="width:32px;height:32px;border-radius:50%;background:#1a5276;cursor:pointer;border:2px solid transparent" data-color="#1a5276"></div>
+                    <div onclick="selectColor('#145a32')" style="width:32px;height:32px;border-radius:50%;background:#145a32;cursor:pointer;border:2px solid transparent" data-color="#145a32"></div>
+                    <div onclick="selectColor('#6e2f8f')" style="width:32px;height:32px;border-radius:50%;background:#6e2f8f;cursor:pointer;border:2px solid transparent" data-color="#6e2f8f"></div>
+                    <div onclick="selectColor('#7b241c')" style="width:32px;height:32px;border-radius:50%;background:#7b241c;cursor:pointer;border:2px solid transparent" data-color="#7b241c"></div>
+                    <div onclick="selectColor('#1a252f')" style="width:32px;height:32px;border-radius:50%;background:#1a252f;cursor:pointer;border:2px solid transparent" data-color="#1a252f"></div>
+                    <input type="color" id="co-color" value="#1a3a5c" oninput="selectColor(this.value)" style="width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;padding:0">
+                  </div>
+                  <div style="margin-top:10px;font-size:12px;color:var(--muted)">สีที่เลือก: <span id="co-color-label" style="font-family:var(--mono)">#1a3a5c</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h3>Footer / เงื่อนไขมาตรฐาน</h3></div>
+                <div style="padding:16px">
+                  <div class="form-group"><label>ข้อความ Footer</label><textarea id="co-footer" placeholder="เงื่อนไขและข้อกำหนดมาตรฐาน..." style="min-height:80px"></textarea></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:4px;margin-bottom:24px">
+            <button class="btn btn-primary" onclick="saveCompanySettings()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              บันทึกตั้งค่าบริษัท
+            </button>
+          </div>
         </div>
       </div>
 
@@ -789,9 +809,11 @@ const CONFIG = {
     company:    'f871327e-833a-475d-aa9f-65a899c0e0a0'
   },
   scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read'],
-  // Approvers can see all quotes - add approver emails here
-  // This will also auto-sync from Approval Tiers settings
-  approverEmails: []
+  // Approvers can see all quotes - auto-sync from Approval Tiers settings
+  approverEmails: [],
+  // Admins can edit Company Settings (logo, address, color, footer)
+  // Add admin emails here - approvers are also admins by default
+  adminEmails: []
 };
 
 // ============================================================
@@ -919,6 +941,15 @@ async function deleteListItem(listId, itemId) {
 // ============================================================
 // SYNC
 // ============================================================
+function isAdminUser() {
+  if (!currentUser) return false;
+  const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
+  const adminEmails = CONFIG.adminEmails.map(e => e.toLowerCase());
+  const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
+  // Approvers are also admins
+  return adminEmails.includes(myEmail) || tierEmails.includes(myEmail);
+}
+
 function isApproverUser() {
   if (!currentUser) return false;
   const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
@@ -985,7 +1016,16 @@ function showPage(id, el) {
   if (id === 'payment') renderPayment();
   if (id === 'settings') setTimeout(renderTiers, 50);
   if (id === 'customers') { loadCustomers().then(renderCustomers); }
-  if (id === 'company') { loadCompanySettings().then(renderCompanySettingsForm); }
+  if (id === 'company') {
+    loadCompanySettings().then(() => {
+      renderCompanySettingsForm();
+      // Show admin section only for admins
+      const adminSection = document.getElementById('admin-settings-section');
+      if (adminSection) {
+        adminSection.style.display = isAdminUser() ? 'block' : 'none';
+      }
+    });
+  }
 }
 
 // ============================================================
@@ -1940,7 +1980,10 @@ function renderCompanySettingsForm() {
     selectColor(s.PrimaryColor||'#1a3a5c');
     const logoSrc = s.LogoBase64 || s.LogoURL || '';
     const sigSrc = s.SignatureBase64 || s.SignatureURL || '';
-    if (logoSrc) document.getElementById('logo-preview').innerHTML=`<img src="${logoSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    // Logo preview only shown for admins
+    const logoPrev = document.getElementById('logo-preview');
+    if (logoPrev && logoSrc) logoPrev.innerHTML=`<img src="${logoSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    // Signature preview shown to everyone
     if (sigSrc) document.getElementById('sig-preview').innerHTML=`<img src="${sigSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
   }
 }
@@ -1989,6 +2032,29 @@ async function uploadCompanyImage(file, name) {
   if (!res.ok) throw new Error('Upload ไม่สำเร็จ');
   const data = await res.json();
   return data.webUrl||'';
+}
+
+async function saveSignatureOnly() {
+  toast('กำลังบันทึกลายเซ็น...', 'info');
+  try {
+    if (pendingSignatureFile) {
+      companySettings.SignatureBase64 = await fileToBase64(pendingSignatureFile);
+      companySettings.SignatureURL = companySettings.SignatureBase64;
+      pendingSignatureFile = null;
+    }
+    const fields = { 
+      Title: 'main',
+      SignatureURL: companySettings.SignatureURL||''
+    };
+    if (companySettingsId) {
+      await updateListItem(CONFIG.lists.company, companySettingsId, fields);
+    } else {
+      const c = await createListItem(CONFIG.lists.company, { ...fields, CompanyName:'', TaxID:'', Phone:'', Email:'', Address:'', PrimaryColor:'#1a3a5c', FooterText:'', LogoURL:'' });
+      companySettingsId = c.id;
+    }
+    companySettings = { ...companySettings, ...fields };
+    toast('บันทึกลายเซ็นสำเร็จ', 'success');
+  } catch(e) { toast('ไม่สำเร็จ: ' + e.message, 'error'); }
 }
 
 async function saveCompanySettings() {
