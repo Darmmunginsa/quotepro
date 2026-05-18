@@ -825,11 +825,11 @@ async function loadUserRoles() {
   if (!currentUser || !accessToken) return;
   try {
     const siteBase = 'https://rpaexpert.sharepoint.com/sites/SalesQuotation/_api/web/sitegroups';
-    const loginName = encodeURIComponent('i:0#.f|membership|' + currentUser.userPrincipalName);
+    const loginName = 'i:0#.f|membership|' + currentUser.userPrincipalName;
     const checkGroup = async (groupId) => {
       try {
-        const r = await fetch(
-          `${siteBase}/GetById(${groupId})/users?$filter=LoginName eq '${loginName}'`,
+        const url = `${siteBase}/GetById(${groupId})/users?$filter=LoginName eq '${encodeURIComponent(loginName)}'`;
+        const r = await fetch(url,
           { headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json;odata=verbose' } }
         );
         const data = await r.json();
@@ -841,12 +841,13 @@ async function loadUserRoles() {
       checkGroup(CONFIG.groups.approver),
       checkGroup(CONFIG.groups.sales)
     ]);
+    console.log(`Role check — Admin:${isAdmin} Approver:${isApprover} Sales:${isSales} | email:${currentUser.userPrincipalName}`);
     userRoles = {
       isAdmin:    isAdmin,
       isApprover: isApprover || isAdmin,
       isSales:    isSales || (!isAdmin && !isApprover)
     };
-    console.log('User roles:', userRoles);
+    console.log('Final userRoles:', JSON.stringify(userRoles));
   } catch(e) {
     console.warn('Role load failed, using email fallback:', e.message);
     const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
