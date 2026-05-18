@@ -803,7 +803,7 @@ const CONFIG = {
     customers:  '488c81b6-872e-4e9f-9b33-0f2b0e5cb7d1',
     company:    'f871327e-833a-475d-aa9f-65a899c0e0a0'
   },
-  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read'],
+  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read','https://rpaexpert.sharepoint.com/AllSites.Read'],
   // SharePoint Group IDs for role-based access
   groups: {
     admin:    22,  // SQ-Admin
@@ -824,24 +824,29 @@ let userRoles = { isAdmin: false, isApprover: false, isSales: true }; // default
 async function loadUserRoles() {
   if (!currentUser || !accessToken) return;
   try {
-    const siteBase = 'https://rpaexpert.sharepoint.com/sites/SalesQuotation/_api/web/sitegroups';
-    const loginName = 'i:0#.f|membership|' + currentUser.userPrincipalName;
+    const email = currentUser.userPrincipalName;
+    const loginName = encodeURIComponent(`i:0#.f|membership|${email}`);
+    const base = 'https://rpaexpert.sharepoint.com/sites/SalesQuotation/_api/web/sitegroups';
+
     const checkGroup = async (groupId) => {
       try {
-        const url = `${siteBase}/GetById(${groupId})/users?$filter=LoginName eq '${encodeURIComponent(loginName)}'`;
-        const r = await fetch(url,
+        const r = await fetch(
+          `${base}/GetById(${groupId})/users?$filter=LoginName eq '${loginName}'&$select=LoginName`,
           { headers: { Authorization: 'Bearer ' + accessToken, Accept: 'application/json;odata=verbose' } }
         );
+        if (!r.ok) return false;
         const data = await r.json();
         return (data?.d?.results?.length || 0) > 0;
       } catch(e) { return false; }
     };
+
     const [isAdmin, isApprover, isSales] = await Promise.all([
       checkGroup(CONFIG.groups.admin),
       checkGroup(CONFIG.groups.approver),
       checkGroup(CONFIG.groups.sales)
     ]);
-    console.log(`Role check — Admin:${isAdmin} Approver:${isApprover} Sales:${isSales} | email:${currentUser.userPrincipalName}`);
+
+    console.log(`Roles — Admin:${isAdmin} Approver:${isApprover} Sales:${isSales}`);
     userRoles = {
       isAdmin:    isAdmin,
       isApprover: isApprover || isAdmin,
@@ -849,7 +854,7 @@ async function loadUserRoles() {
     };
     console.log('Final userRoles:', JSON.stringify(userRoles));
   } catch(e) {
-    console.warn('Role load failed, using email fallback:', e.message);
+    console.warn('Role load failed:', e.message);
     const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
     const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
     const isApproverByEmail = tierEmails.includes(myEmail);
