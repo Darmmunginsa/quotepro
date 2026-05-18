@@ -2285,7 +2285,7 @@ function renderPDFHTML(d) {
   const s = companySettings || {};
   const primaryColor = s.PrimaryColor || '#1a3a5c';
   const q = d.q;
-  return `<div class="pdf-preview" id="pdf-printable" style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;color:#1a1a2e;background:#fff;padding:32px 40px">
+  return `<div class="pdf-preview" id="pdf-printable" style="font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;color:#1a1a2e;background:#fff;padding:32px;min-height:277mm;display:flex;flex-direction:column">
 
     <!-- HEADER -->
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid ${primaryColor}">
@@ -2298,18 +2298,18 @@ function renderPDFHTML(d) {
           ${s.TaxID ? 'เลขประจำตัวผู้เสียภาษี: '+s.TaxID : ''}
         </div>
       </div>
-      <div style="text-align:right;width:200px;flex-shrink:0;overflow:hidden">
+      <div style="text-align:right;min-width:180px;flex-shrink:0">
         <div style="background:${primaryColor};color:#fff;padding:8px 16px;border-radius:6px;margin-bottom:8px;display:inline-block">
           <div style="font-size:10px;opacity:0.8">Quotation No.</div>
           <div style="font-size:16px;font-weight:700;letter-spacing:0.5px">${q.Title||''}</div>
         </div>
-        <table style="font-size:11px;width:100%;border-collapse:collapse;text-align:left;color:#1a1a2e;word-break:break-all">
+        <table style="font-size:11px;width:100%;border-collapse:collapse;text-align:left;color:#1a1a2e">
           <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Quotation Date:</td><td style="font-weight:600;color:#1a1a2e">${(q.QuoteDate||'').split('T')[0]}</td></tr>
           ${q.ContractStartDate ? `<tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">เริ่มสัญญา:</td><td style="font-weight:600;color:#1a1a2e">${(q.ContractStartDate||'').split('T')[0]}</td></tr>` : ''}
           ${q.ContractEndDate ? `<tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">สิ้นสุดสัญญา:</td><td style="font-weight:600;color:#1a1a2e">${(q.ContractEndDate||'').split('T')[0]}</td></tr>` : ''}
           <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Sale Name:</td><td style="font-weight:600;color:#1a1a2e">${q.SaleName||''}</td></tr>
           <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Tel No.:</td><td style="font-weight:600;color:#1a1a2e">${q.SaleTel||''}</td></tr>
-          <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Email:</td><td style="font-weight:600;color:#1a1a2e;font-size:10px;word-break:break-all">${q.SaleEmail||''}</td></tr>
+          <tr><td style="color:#666;padding:1px 6px 1px 0;white-space:nowrap">Email:</td><td style="font-weight:600;color:#1a1a2e">${q.SaleEmail||''}</td></tr>
         </table>
       </div>
     </div>
@@ -2363,7 +2363,7 @@ function renderPDFHTML(d) {
 
     <!-- TOTALS -->
     <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
-      <table style="font-size:12px;min-width:280px;max-width:100%;border-collapse:collapse;color:#1a1a2e">
+      <table style="font-size:12px;min-width:280px;border-collapse:collapse;color:#1a1a2e">
         <tr><td style="padding:4px 16px 4px 0;color:#444">ยอดรวมก่อนส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#1a1a2e">${fmt(d.sub)}</td></tr>
         ${d.discAmt>0 ? `<tr><td style="padding:4px 16px 4px 0;color:#444">ส่วนลด</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#e74c3c">(${fmt(d.discAmt)})</td></tr>` : ''}
         <tr><td style="padding:4px 16px 4px 0;color:#444">VAT 7%</td><td style="text-align:right;font-family:monospace;padding:4px 0;color:#1a1a2e">${fmt(d.vat)}</td></tr>
@@ -2371,12 +2371,12 @@ function renderPDFHTML(d) {
           <td style="padding:8px 16px 4px 0;font-size:14px;font-weight:700;color:${primaryColor}">ยอดรวมสุทธิ</td>
           <td style="text-align:right;font-family:monospace;font-size:16px;font-weight:700;color:${primaryColor};padding:8px 0 4px">${fmt(d.grand)}</td>
         </tr>
-        <tr><td style="padding:2px 16px 0 0;color:#444">วิธีชำระเงิน</td><td style="text-align:right;padding:2px 0;font-weight:500;color:#1a1a2e;word-break:break-word;max-width:150px">${q.PaymentMethod||''}</td></tr>
+        <tr><td style="padding:2px 16px 0 0;color:#444">วิธีชำระเงิน</td><td style="text-align:right;padding:2px 0;font-weight:500;color:#1a1a2e">${q.PaymentMethod||''}</td></tr>
       </table>
     </div>
 
-    <!-- FOOTER TERMS + SIGNATURES -->
-    <div class="pdf-footer-block" style="padding-top:16px">
+    <!-- FOOTER TERMS + SIGNATURES pushed to bottom -->
+    <div style="margin-top:auto;padding-top:24px">
     ${s.FooterText ? `
     <div style="background:#f8fafc;border-radius:6px;padding:12px 14px;margin-bottom:16px;font-size:10px;color:#666;line-height:1.8;white-space:pre-line;border-left:3px solid ${primaryColor}">
       ${s.FooterText}
@@ -2410,6 +2410,7 @@ function renderPDFHTML(d) {
       </div>
     </div>
 
+    </div><!-- end mt-auto wrapper -->
   </div>`;
 }
 
@@ -2440,57 +2441,15 @@ function toast(msg, type='info') {
 }
 
 function exportPDF() {
+  const s = companySettings || {};
+  const primaryColor = s.PrimaryColor || '#1a3a5c';
   const el = document.getElementById('pdf-printable');
   if (!el) { toast('ไม่พบข้อมูล PDF', 'error'); return; }
-  const css = [
-    '*{box-sizing:border-box;margin:0;padding:0}',
-    "body{font-family:'IBM Plex Sans Thai',sans-serif;color:#1a1a2e;background:#fff;font-size:12px;width:210mm;height:297mm;overflow:hidden}",
-    'table{width:100%;border-collapse:collapse}',
-    '.pdf-preview{',
-      'width:180mm;',
-      'min-height:267mm;',
-      'max-height:267mm;',
-      'overflow:hidden;',
-      'display:flex;',
-      'flex-direction:column;',
-      'padding:0;',
-      'position:relative;',
-    '}',
-    '.pdf-footer-block{margin-top:auto}',
-    'tbody tr{page-break-inside:avoid}',
-    '@page{size:A4;margin:15mm 15mm}',
-    '@media print{',
-      'html,body{width:210mm;height:297mm;margin:0;padding:0}',
-      '.pdf-preview{width:100%;min-height:267mm;max-height:none}',
-    '}'
-  ].join('');
-
-  // Script that auto-scales content to fit 1 A4 page
-  const scaleScript = [
-    'window.onload=function(){',
-      'var el=document.querySelector(".pdf-preview");',
-      'if(!el)return;',
-      'var pageH=267;',// mm available
-      'var elH=el.scrollHeight;',
-      'var mmH=elH*0.264583;',// px to mm
-      'if(mmH>pageH){',
-        'var scale=pageH/mmH;',
-        'el.style.transform="scale("+scale+")";',
-        'el.style.transformOrigin="top left";',
-        'el.style.width=(100/scale)+"%";',
-        'el.style.maxHeight="none";',
-      '}',
-      'setTimeout(function(){window.print();},600);',
-    '}'
-  ].join('');
-
-  const html = '<!DOCTYPE html><html>'
-    + '<head><meta charset="UTF-8"><title>Quotation<\/title>'
+  // Build PDF HTML using string concat to avoid browser HTML parser issues
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Quotation<\/title>'
     + '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">'
-    + '<style>' + css + '<\/style><\/head>'
-    + '<body>' + el.innerHTML
-    + '<scr' + 'ipt>' + scaleScript + '<\/scr' + 'ipt>'
-    + '<\/body><\/html>';
+    + '<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:\'IBM Plex Sans Thai\',sans-serif;padding:20px 30px;color:#1a1a2e;background:#fff;font-size:12px}table{width:100%;border-collapse:collapse}@media print{@page{margin:10mm}body{padding:0}}<\/style><\/head>'
+    + '<body>' + el.innerHTML + '<scr' + 'ipt>setTimeout(()=>{window.print();},800);<\/scr' + 'ipt><\/body><\/html>';
   const blob = new Blob([html], {type:'text/html;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
