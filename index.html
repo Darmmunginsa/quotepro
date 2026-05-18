@@ -308,6 +308,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
         <div style="flex:1;min-width:0">
           <div class="user-name" id="user-name">กำลังโหลด...</div>
           <div class="user-role" id="user-email"></div>
+          <div id="user-role-badge" style="font-size:9px;margin-top:1px"></div>
         </div>
         <button class="btn-logout" onclick="logout()" title="ออกจากระบบ">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -787,7 +788,10 @@ const CONFIG = {
     customers:  '488c81b6-872e-4e9f-9b33-0f2b0e5cb7d1',
     company:    'f871327e-833a-475d-aa9f-65a899c0e0a0'
   },
-  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read']
+  scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All','https://graph.microsoft.com/User.Read'],
+  // Approvers can see all quotes - add approver emails here
+  // This will also auto-sync from Approval Tiers settings
+  approverEmails: []
 };
 
 // ============================================================
@@ -841,6 +845,15 @@ async function afterLogin() {
     document.getElementById('app-screen').style.display = 'flex';
     initNewQuote();
     await syncAll();
+    // Show role badge after sync (tiers loaded)
+    const roleBadge = document.getElementById('user-role-badge');
+    if (roleBadge) {
+      if (isApproverUser()) {
+        roleBadge.innerHTML = '<span style="background:rgba(251,191,36,0.2);color:var(--amber);padding:1px 6px;border-radius:10px;font-size:9px">Approver</span>';
+      } else {
+        roleBadge.innerHTML = '<span style="background:rgba(79,142,247,0.15);color:var(--accent2);padding:1px 6px;border-radius:10px;font-size:9px">Sales</span>';
+      }
+    }
   } catch(e) {
     toast('Login ไม่สำเร็จ: ' + e.message, 'error');
   }
@@ -906,15 +919,44 @@ async function deleteListItem(listId, itemId) {
 // ============================================================
 // SYNC
 // ============================================================
+function isApproverUser() {
+  if (!currentUser) return false;
+  const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
+  // Check if user is in any approval tier
+  const tierEmails = approvalTiers.map(t => (t.approverEmail||'').toLowerCase()).filter(Boolean);
+  // Also check CONFIG.approverEmails
+  const configEmails = CONFIG.approverEmails.map(e => e.toLowerCase());
+  return tierEmails.includes(myEmail) || configEmails.includes(myEmail);
+}
+
+function filterQuotesForUser(allQuotes) {
+  if (!currentUser) return [];
+  if (isApproverUser()) return allQuotes; // Approver sees all
+  const myEmail = (currentUser.userPrincipalName||'').toLowerCase();
+  const myName = (currentUser.displayName||'').toLowerCase();
+  return allQuotes.filter(q => {
+    const saleEmail = (q.SaleEmail||'').toLowerCase();
+    const saleName = (q.SaleName||'').toLowerCase();
+    // Match by sale email or sale name or created by current user
+    return saleEmail === myEmail || 
+           (saleEmail === '' && saleName === myName) ||
+           (saleEmail === '' && saleName === '');
+  });
+}
+
 async function syncAll() {
   toast('กำลัง Sync กับ SharePoint...', 'info');
   try {
-    [catalogData, quotesData] = await Promise.all([
+    const [catData, allQuotes] = await Promise.all([
       getListItems(CONFIG.lists.catalog),
       getListItems(CONFIG.lists.quotations)
     ]);
+    catalogData = catData;
+    // Load tiers first so isApproverUser() works correctly
     await loadApprovalTiers();
     await loadCompanySettings();
+    // Filter quotes based on user role
+    quotesData = filterQuotesForUser(allQuotes);
     renderDash();
     renderQuotes();
     renderCatalog();
