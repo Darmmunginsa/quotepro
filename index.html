@@ -415,6 +415,26 @@ tr:hover td{background:rgba(255,255,255,0.02)}
               <div class="form-group"><label>ชื่อ Sale</label><input id="q-sale-name" placeholder="ชื่อพนักงานขาย"></div>
               <div class="form-group"><label>เบอร์ Sale</label><input id="q-sale-tel" placeholder="08x-xxx-xxxx"></div>
               <div class="form-group" style="grid-column:1/-1"><label>Email Sale</label><input id="q-sale-email" placeholder="sale@itservices.co.th"></div>
+              <div class="form-group" style="grid-column:1/-1">
+                <label>ลายเซ็นผู้จัดทำ (แสดงใน Quoted By)</label>
+                <div style="display:flex;align-items:center;gap:14px;margin-top:4px">
+                  <div id="q-sig-preview" style="width:140px;height:60px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;background:var(--surface2)" onclick="document.getElementById('q-sig-file').click()">
+                    <span style="font-size:11px;color:var(--muted);text-align:center;padding:4px">คลิกเพื่ออัปโหลด<br>ลายเซ็น</span>
+                  </div>
+                  <div>
+                    <input type="file" id="q-sig-file" accept="image/*" style="display:none" onchange="handleQuoteSigUpload(this)">
+                    <button class="btn btn-sm" onclick="document.getElementById('q-sig-file').click()">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      อัปโหลดลายเซ็น
+                    </button>
+                    <button class="btn btn-sm" onclick="loadMySignature()" style="margin-left:6px" title="โหลดลายเซ็นที่บันทึกไว้">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                      ใช้ลายเซ็นเดิม
+                    </button>
+                    <div style="font-size:11px;color:var(--muted);margin-top:6px">ระบบจะจำลายเซ็นของคุณสำหรับครั้งถัดไป</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -529,31 +549,6 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 
       <!-- COMPANY SETTINGS -->
       <div class="page" id="page-company">
-        <!-- Signature section - visible to ALL users -->
-        <div class="card" style="margin-bottom:14px">
-          <div class="card-header">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            <h3>ลายเซ็นของฉัน</h3>
-            <span style="font-size:11px;color:var(--muted)">แสดงใน Quoted By ของใบเสนอราคา</span>
-          </div>
-          <div style="padding:16px;display:flex;align-items:center;gap:20px">
-            <div id="sig-preview" style="width:180px;height:80px;border:1.5px dashed var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0" onclick="document.getElementById('sig-file').click()">
-              <span style="font-size:12px;color:var(--muted)">คลิกเพื่ออัปโหลดลายเซ็น</span>
-            </div>
-            <div>
-              <input type="file" id="sig-file" accept="image/*" style="display:none" onchange="previewCompanyImage('sig-file','sig-preview','signature')">
-              <button class="btn btn-sm" onclick="document.getElementById('sig-file').click()">เปลี่ยนลายเซ็น</button>
-              <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">อัปโหลดรูปลายเซ็นของคุณ<br>รองรับ JPG, PNG ขนาดสูงสุด 2MB</p>
-            </div>
-          </div>
-          <div style="padding:0 16px 14px;display:flex;justify-content:flex-end">
-            <button class="btn btn-primary btn-sm" onclick="saveSignatureOnly()">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
-              บันทึกลายเซ็น
-            </button>
-          </div>
-        </div>
-
         <!-- Admin-only section -->
         <div id="admin-settings-section" style="display:none">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:8px;font-size:12px;color:var(--amber)">
@@ -1110,6 +1105,8 @@ function initNewQuote() {
   document.getElementById('q-terms').value = companySettings?.FooterText||'ชำระภายใน 30 วันนับจากวันรับสินค้า';
   quoteItems = [];
   addItem(); addItem();
+  // Load user's signature
+  setTimeout(initQuoteSignature, 100);
 }
 
 function addItem(p = null) {
@@ -1983,8 +1980,7 @@ function renderCompanySettingsForm() {
     // Logo preview only shown for admins
     const logoPrev = document.getElementById('logo-preview');
     if (logoPrev && logoSrc) logoPrev.innerHTML=`<img src="${logoSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
-    // Signature preview shown to everyone
-    if (sigSrc) document.getElementById('sig-preview').innerHTML=`<img src="${sigSrc}" style="max-width:100%;max-height:100%;object-fit:contain">`;
+    // Signature now managed per-quote, not here
   }
 }
 
@@ -2148,6 +2144,7 @@ function previewPDF() {
     Terms: document.getElementById('q-terms').value
   };
   const d = buildPDFData(fakeQ, quoteItems.map(i=>({Title:i.name,Quantity:i.qty,Unit:i.unit,UnitPrice:i.price,DiscountPct:i.disc})));
+  d.signatureBase64 = currentQuoteSignature || '';
   document.getElementById('pdf-content').innerHTML = renderPDFHTML(d);
   openModal('pdf-modal');
 }
@@ -2161,6 +2158,11 @@ async function showPDFForQuote(id) {
     items = all.filter(i => String(i.QuoteID) === String(id));
   } catch(e) {}
   const d = buildPDFData(q, items);
+  // Try to load signature for the sale person
+  try {
+    const saleEmail = q.SaleEmail || currentUser?.userPrincipalName || '';
+    d.signatureBase64 = localStorage.getItem('mySignature_' + saleEmail) || currentQuoteSignature || companySettings.SignatureBase64 || companySettings.SignatureURL || '';
+  } catch(e2) { d.signatureBase64 = currentQuoteSignature || ''; }
   document.getElementById('pdf-content').innerHTML = renderPDFHTML(d);
   openModal('pdf-modal');
 }
@@ -2287,7 +2289,7 @@ function renderPDFHTML(d) {
       </div>
       <div>
         <div style="font-size:10px;color:#888;margin-bottom:4px">Quoted By</div>
-        ${(s.SignatureBase64||s.SignatureURL) ? `<img src="${s.SignatureBase64||s.SignatureURL}" style="max-height:44px;object-fit:contain;display:block;margin:0 auto 4px">` : '<div style="height:44px"></div>'}
+        ${(d.signatureBase64||s.SignatureBase64||s.SignatureURL) ? `<img src="${d.signatureBase64||s.SignatureBase64||s.SignatureURL}" style="max-height:44px;object-fit:contain;display:block;margin:0 auto 4px">` : '<div style="height:44px"></div>'}
         <div style="border-top:0.5px solid #ccc;padding-top:8px">
           <div style="color:#333;font-weight:500">${q.SaleName||'................................................'}</div>
           <div style="color:#888;font-size:10px;margin-top:4px">Strategic Partnership</div>
